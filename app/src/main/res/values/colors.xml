@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorLoginBg">#FFFFFF</color>
+    <color name="colorLoginOrgText">#173152</color>
+    <color name="colorLoginFooter">#3FA577</color>
+    <color name="colorDefaultBg">#F3F3F3</color>
+    <color name="colorHeader">#3FA577</color>
+
+    <color name="colorOrgBgSelected">#DFF1EF</color>
+    <color name="colorOrgTextSelected">#D6D6D6</color>
+
+    <color name="colorListTextUnselected">#828281</color>
+</resources>

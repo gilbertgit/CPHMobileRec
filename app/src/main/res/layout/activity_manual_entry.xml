@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+                android:background="@color/colorDefaultBg">
+
+    <!--<EditText-->
+        <!--android:id="@+id/textManualVin"-->
+        <!--android:layout_width="400dp"-->
+        <!--android:layout_height="50dp"-->
+        <!--android:hint="Enter VIN Here"-->
+        <!--android:onClick="openKeyboard"-->
+        <!--android:singleLine="true" />-->
+
+    <!--<FrameLayout-->
+        <!--android:layout_width="fill_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_marginTop="9dp"-->
+        <!--android:padding="5dp">-->
+
+    <EditText
+    android:id="@+id/textManualVin"
+    android:layout_width="400dp"
+    android:layout_height="50dp"
+    android:layout_marginTop="40dp"
+    android:layout_marginLeft="5dp"
+    android:paddingLeft="10dp"
+    android:hint="Enter VIN Here"
+    android:onClick="openKeyboard"
+    android:singleLine="true"
+        android:background="@drawable/custom_edittext"/>
+
+        <!--<EditText-->
+            <!--android:id="@+id/textManualVin"-->
+            <!--android:layout_width="fill_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:inputType="numberDecimal"-->
+            <!--android:layout_marginTop="20dp"-->
+            <!--android:textSize="20dp"-->
+            <!--android:textColor="@color/colorListTextUnselected"-->
+            <!--android:textStyle="bold"-->
+            <!--android:hint="Enter VIN Here"-->
+            <!--android:onClick="openKeyboard"-->
+            <!--android:singleLine="true" />-->
+
+        <Button
+            android:id="@+id/buttonClearText"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginRight="15dp"
+            android:background="@drawable/x_green"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="52dp"
+            />
+
+    <!--</FrameLayout>-->
+
+    <android.inputmethodservice.KeyboardView
+        android:id="@+id/keyboardView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:visibility="gone"
+        />
+
+
+
+</RelativeLayout>

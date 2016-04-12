@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:layout_marginRight="25dp"
+                android:layout_marginLeft="25dp"
+                android:layout_marginTop="20dp"
+
+    >
+
+        <TextView
+            android:id="@+id/textVin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1HGEJ8224VL803367"
+            android:textAllCaps="true"
+            android:textStyle="bold"
+            />
+        <TextView
+            android:id="@+id/textDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:textStyle="normal"
+            android:text="4/8/2014"
+            android:layout_marginRight="90dp"/>
+
+        <TextView
+            android:id="@+id/textTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:textStyle="normal"
+            android:text="4:26:44 PM"
+            android:layout_marginLeft="10dp"/>
+
+
+        <TextView
+            android:id="@+id/textNewUsed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:text="Loaner"
+            android:layout_below="@+id/textVin"
+            />
+        <TextView
+            android:id="@+id/textEntryType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_below="@+id/textTime"
+            android:layout_alignParentRight="true"
+            android:textStyle="normal"
+            android:text="Scanned"
+            />
+        <TextView
+            android:id="@+id/textLot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_below="@+id/textNewUsed"
+            android:text="Lot 1"
+            />
+
+    </RelativeLayout>

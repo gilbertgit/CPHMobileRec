@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">CPHMobileRec</string>
+    <string name="action_settings">Settings</string>
+    <string name="admin_password">1204</string>
+    <string name="empty_org">(NO ORGANIZATION SELECTED)</string>
+    <string name="login_header">ENTER PIN TO LOGIN</string>
+    <string name="footer">A Product of CP Handheld</string>
+    <string name="default_header">CPH MOBILE REC APP</string>
+    <string name="greeting">HELLO,</string>
+    <string name="hello_admin">ADMIN</string>
+    <string name="org_header">SELECT ORGANIZATION</string>
+    <string name="datawedge_data_string">"com.motorolasolutions.emdk.datawedge.data_string"</string>
+    <string name="datawedge_source">"com.motorolasolutions.emdk.datawedge.source"</string>
+    <string name="scan_intent">"com.cphandheld.cphmobilerec.RECVRBI"</string>
+
+    <string-array name="entry_type_array">
+        <item>New</item>
+        <item>Used</item>
+        <item>Loaner</item>
+    </string-array>
+
+</resources>

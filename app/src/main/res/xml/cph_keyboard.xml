@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
-          android:keyWidth="15%p"
-          android:keyHeight="8%p"
+          android:keyHeight="98px"
+          android:keyWidth="100px"
           android:horizontalGap="0px"
           android:verticalGap="1%p"
     >
+    <!--android:keyWidth="15%p"-->
+    <!--android:keyHeight="8%p"-->
 
     <Row  android:rowEdgeFlags="top">
         <Key android:codes="1"    android:keyLabel="1" android:keyEdgeFlags="left"/>
@@ -19,15 +21,15 @@
         <Key android:codes="0"    android:keyLabel="0" android:keyEdgeFlags="right"/>
     </Row>
     <Row>
-        <Key android:codes="11"    android:keyLabel="Q" android:keyEdgeFlags="left" />
+        <Key android:codes="11"    android:keyIcon="@drawable/disabled_q_key_2" android:keyEdgeFlags="left" />
         <Key android:codes="12"    android:keyLabel="W" />
         <Key android:codes="13"    android:keyLabel="E" />
         <Key android:codes="14"    android:keyLabel="R" />
         <Key android:codes="15"    android:keyLabel="T" />
         <Key android:codes="16"    android:keyLabel="Y" />
         <Key android:codes="17"    android:keyLabel="U" />
-        <Key android:codes="18"    android:keyLabel="I" />
-        <Key android:codes="19"    android:keyLabel="O" />
+        <Key android:codes="18"    android:keyIcon="@drawable/disabled_i_key" />
+        <Key android:codes="19"    android:keyIcon="@drawable/disabled_o_key" />
         <Key android:codes="10"    android:keyLabel="P" android:keyEdgeFlags="right"/>
     </Row>
     <Row>
@@ -52,7 +54,7 @@
         <Key android:codes="35"    android:keyLabel="B"  />
         <Key android:codes="36"    android:keyLabel="N" />
         <Key android:codes="37"    android:keyLabel="M" />
-        <Key android:codes="-5"    android:keyLabel="" android:keyWidth="20%p" android:isRepeatable="true" android:horizontalGap="8%p" />
+        <Key android:codes="-5"    android:keyIcon="@drawable/backspace" android:keyWidth="110px" android:isRepeatable="true" android:horizontalGap="8%p" />
         <Key android:codes="29"    android:keyLabel="" android:keyWidth="0%p" android:horizontalGap="8%p"/>
     </Row>
 </Keyboard>

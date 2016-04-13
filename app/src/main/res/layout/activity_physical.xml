@@ -12,6 +12,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@android:color/white">
+
+        <view
+            class="com.cphandheld.cphmobilerec.BackgroundContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/listViewBackground">
         <ListView
             android:id="@+id/listPhysical"
             android:layout_width="match_parent"
@@ -20,6 +26,7 @@
             android:layout_marginTop="0dp"
             android:divider="@color/colorDefaultBg"
             android:dividerHeight="2dp"/>
+        </view>
     </RelativeLayout>
 
 

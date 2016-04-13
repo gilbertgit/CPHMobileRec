@@ -2,22 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
-              android:layout_height="match_parent"
-                android:background="@color/colorDefaultBg">
-
-    <!--<EditText-->
-        <!--android:id="@+id/textManualVin"-->
-        <!--android:layout_width="400dp"-->
-        <!--android:layout_height="50dp"-->
-        <!--android:hint="Enter VIN Here"-->
-        <!--android:onClick="openKeyboard"-->
-        <!--android:singleLine="true" />-->
-
-    <!--<FrameLayout-->
-        <!--android:layout_width="fill_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_marginTop="9dp"-->
-        <!--android:padding="5dp">-->
+              android:layout_height="match_parent" android:background="@color/colorDefaultBg"
+                >
 
     <EditText
     android:id="@+id/textManualVin"
@@ -29,20 +15,9 @@
     android:hint="Enter VIN Here"
     android:onClick="openKeyboard"
     android:singleLine="true"
-        android:background="@drawable/custom_edittext"/>
+    android:background="@drawable/custom_edittext"
+    />
 
-        <!--<EditText-->
-            <!--android:id="@+id/textManualVin"-->
-            <!--android:layout_width="fill_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:inputType="numberDecimal"-->
-            <!--android:layout_marginTop="20dp"-->
-            <!--android:textSize="20dp"-->
-            <!--android:textColor="@color/colorListTextUnselected"-->
-            <!--android:textStyle="bold"-->
-            <!--android:hint="Enter VIN Here"-->
-            <!--android:onClick="openKeyboard"-->
-            <!--android:singleLine="true" />-->
 
         <Button
             android:id="@+id/buttonClearText"
@@ -54,8 +29,6 @@
             android:layout_alignParentEnd="true"
             android:layout_marginTop="52dp"
             />
-
-    <!--</FrameLayout>-->
 
     <android.inputmethodservice.KeyboardView
         android:id="@+id/keyboardView"

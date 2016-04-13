@@ -49,6 +49,11 @@
                   android:screenOrientation="portrait"
                   android:theme="@style/MyCustomTheme">
         </activity>
+        <activity android:name=".EditEntryActivity"
+                  android:label="EditEntryActivity"
+                  android:screenOrientation="portrait"
+                  android:theme="@style/MyCustomTheme">
+        </activity>
     </application>
 
 </manifest>

@@ -104,7 +104,7 @@ public class ManualEntryActivity extends ActionBarActivity {
         switch (id) {
             case R.id.action_done:
                 Calendar c = Calendar.getInstance();
-                SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy");
+                SimpleDateFormat df = new SimpleDateFormat("MM/dd/yy");
                 SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
                 String formattedDate = df.format(c.getTime());
                 String formattedTime = tf.format(c.getTime());

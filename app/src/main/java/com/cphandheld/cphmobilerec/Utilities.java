@@ -4,11 +4,16 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.support.annotation.NonNull;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Created by titan on 4/7/16.
@@ -16,10 +21,15 @@ import java.util.HashMap;
 public class Utilities {
 
     public static String AppURL = " http://mobileapi.cphandheld.com/";
+    public static String AppDevURL = " http://mobileapi-dev.cphandheld.com/";
+    //public static String AppDevURL = "/";
     public static final String OrganizationsURL = "Organizations";
+    public static final String InventoryUploadURL = "inventory/upload";
+    public static final String LoginURL = "dealerships/getbypin/";
+
+    public static List<Dealership> dealerships;
     public static User currentUser = new User();
     public static HashMap<String, String> keyCodeMap;
-
 
     public static String StreamToString(InputStreamReader isr) throws IOException
     {

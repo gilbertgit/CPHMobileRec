@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">CPHMobileRec</string>
     <string name="action_settings">Settings</string>
-    <string name="admin_password">1204</string>
+    <string name="admin_password">351392</string>
     <string name="empty_org">(NO ORGANIZATION SELECTED)</string>
     <string name="login_header">ENTER PIN TO LOGIN</string>
     <string name="footer">A Product of CP Handheld</string>

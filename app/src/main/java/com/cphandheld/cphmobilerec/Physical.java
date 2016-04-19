@@ -5,39 +5,43 @@ package com.cphandheld.cphmobilerec;
  */
 public class Physical {
 
-    private String _vin;
-    private String _dealership;
-    private String _entryType;
-    private String _newUsed;
+    private String VIN;
+    private String DealerCode;
+    private String ScanMethod;
+    private String ScanType;
     private String _date;
     private String _time;
-    private String _lot;
+    private String Lot;
+    private String Notes;
+    private String TimeStamp;
 
 
-    public Physical( String vin, String dealership, String entryType, String newUsed, String date, String time, String lot) {
-        _vin = vin;
-        _dealership = dealership;
-        _entryType = entryType;
-        _newUsed = newUsed;
+    public Physical( String vin, String dealership, String entryType, String newUsed, String date, String time, String lot, String notes) {
+        VIN = vin;
+        DealerCode = dealership;
+        ScanMethod = entryType;
+        ScanType = newUsed;
         _date = date;
         _time = time;
-        _lot = lot;
+        Lot = lot;
+        Notes = notes;
+        TimeStamp = date + " " + time;
     }
 
     public String getVIN() {
-        return _vin;
+        return VIN;
     }
 
     public String getDealership() {
-        return _dealership;
+        return DealerCode;
     }
 
     public String getEntryType() {
-        return _entryType;
+        return ScanMethod;
     }
 
     public String getNewUsed() {
-        return _newUsed;
+        return ScanType;
     }
 
     public String getDate() {
@@ -49,12 +53,20 @@ public class Physical {
     }
 
     public String getLot() {
-        return _lot;
+        return Lot;
+    }
+
+    public String getNotes() {
+        return Notes;
+    }
+
+    public String getTimeStamp() {
+        return TimeStamp;
     }
 
         @Override
         public String toString() {
-            return this._vin;
+            return this.VIN;
         }
     }
 

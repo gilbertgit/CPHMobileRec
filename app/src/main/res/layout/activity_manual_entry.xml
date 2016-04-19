@@ -16,6 +16,7 @@
     android:onClick="openKeyboard"
     android:singleLine="true"
     android:background="@drawable/custom_edittext"
+    android:maxLength="20"
     />
 
 

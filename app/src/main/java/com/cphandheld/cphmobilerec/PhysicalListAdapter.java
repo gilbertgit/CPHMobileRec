@@ -32,18 +32,11 @@ public class PhysicalListAdapter  extends ArrayAdapter<Physical> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
-        //View view = super.getView(position, convertView, parent);
-
         //Inflate view for each element in list.
         convertView = mInflater.inflate(R.layout.physical_list_item, null);
-       // if (view != convertView) {
-            // Add touch listener to every new view to track swipe motion
         convertView.setOnTouchListener(mTouchListener);
-        //convertView.setOnClickListener(mClickListener);
         convertView.setClickable(true);
-        //}
-        //convertView.setOnTouchListener(mTouchListener);
-        //Get details for bin
+
         Physical phy = mPhysicals.get(position);
 
         ((TextView) convertView.findViewById(R.id.textVin)).setText((phy.getVIN()));
@@ -51,7 +44,20 @@ public class PhysicalListAdapter  extends ArrayAdapter<Physical> {
         ((TextView) convertView.findViewById(R.id.textDate)).setText((phy.getDate()));
         ((TextView) convertView.findViewById(R.id.textTime)).setText((phy.getTime()));
         ((TextView) convertView.findViewById(R.id.textEntryType)).setText((phy.getEntryType()));
-        ((TextView) convertView.findViewById(R.id.textNewUsed)).setText((phy.getNewUsed()));
+        String newUsed = phy.getNewUsed();
+
+        switch (newUsed) {
+            case "0":
+                newUsed = "New";
+                break;
+            case "1":
+                newUsed = "Used";
+                break;
+            case "2":
+                newUsed = "Loaner";
+                break;
+        }
+        ((TextView) convertView.findViewById(R.id.textNewUsed)).setText((newUsed));
         //return convertView;
         return convertView;
     }

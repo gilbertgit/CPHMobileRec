@@ -7,9 +7,9 @@ import java.io.Serializable;
  */
 public class User implements Serializable
 {
-    int userId;
-    String name;
-    int organizationId;
+    int Id;
+    String FirstName;
+    String LastName;
 
     User() {
     }

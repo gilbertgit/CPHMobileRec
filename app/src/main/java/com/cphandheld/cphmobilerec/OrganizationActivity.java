@@ -18,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
@@ -43,6 +44,7 @@ public class OrganizationActivity  extends Activity
     ArrayList orgs;
     private ProgressDialog mProgressDialog;
     DBHelper dbHelper;
+    Button buttonImportData;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -90,6 +92,14 @@ public class OrganizationActivity  extends Activity
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
+            }
+        });
+
+        buttonImportData = (Button)findViewById(R.id.buttonImportData);
+        buttonImportData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.ImportData(getApplicationContext());
             }
         });
 

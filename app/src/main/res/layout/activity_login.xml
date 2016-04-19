@@ -73,6 +73,18 @@
             android:id="@+id/entry4"
             android:src="@drawable/no_pin"
             android:layout_marginStart="15dp"/>
+        <ImageView
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:id="@+id/entry5"
+            android:src="@drawable/no_pin"
+            android:layout_marginStart="15dp"/>
+        <ImageView
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:id="@+id/entry6"
+            android:src="@drawable/no_pin"
+            android:layout_marginStart="15dp"/>
     </LinearLayout>
 
     <LinearLayout

@@ -4,10 +4,13 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -16,6 +19,21 @@ import android.widget.Toast;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Type;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 public class LoginActivity extends ActionBarActivity {
 
@@ -34,6 +52,8 @@ public class LoginActivity extends ActionBarActivity {
     ImageView imageEntry2;
     ImageView imageEntry3;
     ImageView imageEntry4;
+    ImageView imageEntry5;
+    ImageView imageEntry6;
     ImageView imageBack;
     ImageView imageLogo;
     TextView textOrgName;
@@ -43,13 +63,19 @@ public class LoginActivity extends ActionBarActivity {
 
     int organizationId = -1;
     String organizationName = "";
+    String errorMessage;
     int clickCount = 0;
     boolean isAdmin = false;
+    DBHelper dbHelper;
+    JSONArray dealershipResults;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        dbHelper = new DBHelper(LoginActivity.this);
+        dbHelper.getWritableDatabase();
 
         // Restore preferences
         SharedPreferences settings = getSharedPreferences(PREFS_FILE, 0);
@@ -70,6 +96,8 @@ public class LoginActivity extends ActionBarActivity {
         imageEntry2 = (ImageView) findViewById(R.id.entry2);
         imageEntry3 = (ImageView) findViewById(R.id.entry3);
         imageEntry4 = (ImageView) findViewById(R.id.entry4);
+        imageEntry5 = (ImageView) findViewById(R.id.entry5);
+        imageEntry6 = (ImageView) findViewById(R.id.entry6);
 
         mProgressDialog = new ProgressDialog(LoginActivity.this);
         mProgressDialog.setIndeterminate(false);
@@ -179,7 +207,13 @@ public class LoginActivity extends ActionBarActivity {
     }
 
     protected void deleteEntry() {
-        if (imageEntry4.getTag() != null) {
+        if (imageEntry6.getTag() != null) {
+            imageEntry6.setTag(null);
+            imageEntry6.setImageResource(R.drawable.no_pin);
+        } else if (imageEntry5.getTag() != null) {
+            imageEntry5.setTag(null);
+            imageEntry5.setImageResource(R.drawable.no_pin);
+        } else if (imageEntry4.getTag() != null) {
             imageEntry4.setTag(null);
             imageEntry4.setImageResource(R.drawable.no_pin);
         } else if (imageEntry3.getTag() != null) {
@@ -208,7 +242,14 @@ public class LoginActivity extends ActionBarActivity {
         } else if (imageEntry4.getTag() == null) {
             imageEntry4.setTag(tag);
             imageEntry4.setImageResource(R.drawable.yes_pin);
-            String pin = (String) imageEntry1.getTag() + (String) imageEntry2.getTag() + (String) imageEntry3.getTag() + tag;
+        } else if (imageEntry5.getTag() == null) {
+            imageEntry5.setTag(tag);
+            imageEntry5.setImageResource(R.drawable.yes_pin);
+        } else if (imageEntry6.getTag() == null) {
+            imageEntry6.setTag(tag);
+            imageEntry6.setImageResource(R.drawable.yes_pin);
+
+            String pin = (String) imageEntry1.getTag() + (String) imageEntry2.getTag() + (String) imageEntry3.getTag() + (String) imageEntry4.getTag() + (String) imageEntry5.getTag() + tag;
 
             if (isAdmin) {
                 if (pin.equals(getString(R.string.admin_password))) {
@@ -225,28 +266,54 @@ public class LoginActivity extends ActionBarActivity {
             }
             else
             {
-                if(pin.equals("1234"))
-                {
-                    Intent i = new Intent(LoginActivity.this, PhysicalActivity.class);
-                    startActivity(i);
+//                if(pin.equals("222222"))
+//                {
+//                    Intent i = new Intent(LoginActivity.this, PhysicalActivity.class);
+//                    startActivity(i);
+//                }
+
+                if (Utilities.isNetworkAvailable(LoginActivity.this)) {
+                    // Authenticate the user
+                    new LoginTask().execute(Integer.toString(organizationId), pin);
+                } else {
+                    // Local Authentication
+                    if (DBUsers.isUserStored(dbHelper, pin)) {
+                        getStoredUser(pin);
+                        Intent i = new Intent(LoginActivity.this, PhysicalActivity.class);
+                        startActivity(i);
+                    } else {
+                        YoyoPin();
+                        Toast.makeText(getApplicationContext(), "User not stored.", Toast.LENGTH_LONG).show();
+                    }
                 }
             }
-
-//            if (Utilities.isNetworkAvailable(LoginActivity.this)) {
-//                // Authenticate the user
-//                new LoginTask().execute(Integer.toString(organizationId), pin);
-//            } else {
-//                // Local Authentication
-//                if (dbHelper.isUserStored(pin)) {
-//                    getStoredUser(pin);
-//                    Intent i = new Intent(LoginActivity.this, LocationActivity.class);
-//                    startActivity(i);
-//                } else {
-//                    YoyoPin();
-//                    Toast.makeText(getApplicationContext(), "User not stored.", Toast.LENGTH_LONG).show();
-//                }
-//            }
         }
+    }
+
+    private void getStoredUser(String pin) {
+        Cursor c = DBUsers.getUserByPin(dbHelper, Integer.parseInt(pin));
+
+        if (c.moveToFirst()) {
+            do {
+
+                int userIdIndex = c.getColumnIndex("id");
+                int userId = c.getInt(userIdIndex);
+
+                int firstNameIndex = c.getColumnIndex("firstname");
+                String firstName = c.getString(firstNameIndex);
+
+                int lastNameIndex = c.getColumnIndex("lastname");
+                String lastName = c.getString(lastNameIndex);
+
+
+                Utilities.currentUser = new User();
+                Utilities.currentUser.Id = userId;
+                Utilities.currentUser.FirstName = firstName;
+                Utilities.currentUser.LastName = lastName;
+
+            } while (c.moveToNext());
+        }
+        c.close();
     }
 
     protected void logoClick() {
@@ -299,6 +366,8 @@ public class LoginActivity extends ActionBarActivity {
         imageEntry2.setImageResource(R.drawable.wrong_pin_x);
         imageEntry3.setImageResource(R.drawable.wrong_pin_x);
         imageEntry4.setImageResource(R.drawable.wrong_pin_x);
+        imageEntry5.setImageResource(R.drawable.wrong_pin_x);
+        imageEntry6.setImageResource(R.drawable.wrong_pin_x);
 
         final Vibrator vibe = (Vibrator) LoginActivity.this.getSystemService(Context.VIBRATOR_SERVICE);
         vibe.vibrate(200);
@@ -320,6 +389,14 @@ public class LoginActivity extends ActionBarActivity {
                 .duration(1000)
                 .playOn(imageEntry4);
 
+        YoYo.with(Techniques.Shake)
+                .duration(1000)
+                .playOn(imageEntry5);
+
+        YoYo.with(Techniques.Shake)
+                .duration(1000)
+                .playOn(imageEntry6);
+
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
@@ -328,12 +405,106 @@ public class LoginActivity extends ActionBarActivity {
                 imageEntry2.setImageResource(R.drawable.no_pin);
                 imageEntry3.setImageResource(R.drawable.no_pin);
                 imageEntry4.setImageResource(R.drawable.no_pin);
+                imageEntry5.setImageResource(R.drawable.no_pin);
+                imageEntry6.setImageResource(R.drawable.no_pin);
                 imageEntry1.setTag(null);
                 imageEntry2.setTag(null);
                 imageEntry3.setTag(null);
                 imageEntry4.setTag(null);
+                imageEntry5.setTag(null);
+                imageEntry6.setTag(null);
             }
         }, 1500);
+    }
+
+    private class LoginTask extends AsyncTask<String, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            mProgressDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(String... params) {
+            Utilities.currentUser = null;
+            if (LoginPost(Integer.parseInt(params[0]), params[1])) {
+
+                Intent i = new Intent(LoginActivity.this, PhysicalActivity.class);
+                startActivity(i);
+                return null;
+
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+
+            ArrayList<Dealership> array = new Gson().fromJson(dealershipResults.toString(), new TypeToken<List<Dealership>>(){}.getType());
+
+            for(Dealership d : array)
+            {
+                DBUsers.insertDealership(dbHelper, Utilities.currentUser.Id, d.Id, d.Name, d.DealerCode, d.Lot1Name, d.Lot2Name, d.Lot3Name, d.Lot4Name, d.Lot5Name, d.Lot6Name, d.Lot7Name, d.Lot8Name, d.Lot9Name);
+            }
+
+            if (Utilities.currentUser == null) {
+                Toast toast = Toast.makeText(getApplicationContext(), "Invalid PIN", Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.BOTTOM, 0, 75);
+                toast.show();
+
+                YoyoPin();
+            }
+            mProgressDialog.dismiss();
+        }
+
+        private boolean LoginPost(int organizationId, String pin) {
+
+            URL url;
+            HttpURLConnection connection;
+            OutputStreamWriter request;
+            JSONObject responseData;
+            JSONObject postData;
+            InputStreamReader isr;
+            String result;
+            Gson gson = new Gson();
+
+            try {
+                String address = Utilities.AppDevURL + Utilities.LoginURL + pin;
+                url = new URL(address);
+                connection = (HttpURLConnection) url.openConnection();
+                isr = new InputStreamReader(connection.getInputStream());
+
+                if (connection.getResponseCode() == 200) {
+                    isr = new InputStreamReader(connection.getInputStream());
+                    result = Utilities.StreamToString(isr);
+                    responseData = new JSONObject(result);
+
+                    Utilities.currentUser = new User();
+                    Utilities.currentUser.Id = responseData.getInt("Id");
+                    Utilities.currentUser.FirstName = responseData.getString("FirstName");
+                    Utilities.currentUser.LastName = responseData.getString("LastName");
+
+                    dealershipResults = responseData.getJSONArray("Dealerships");
+
+                    if (!DBUsers.isUserStored(dbHelper, pin)) {
+                        DBUsers.insertUser(dbHelper, Utilities.currentUser.Id, Integer.parseInt(pin), responseData.getString("FirstName"), responseData.getString("LastName"));
+                    }
+                    return true;
+                } else {
+                    isr = new InputStreamReader(connection.getErrorStream());
+                    result = Utilities.StreamToString(isr);
+                    responseData = new JSONObject(result);
+                    errorMessage = responseData.getString("Message");
+                    Log.i("vehicle check in error", errorMessage);
+                    return false;
+                }
+            } catch (JSONException | IOException e) {
+                e.printStackTrace();
+            }
+
+
+            return false;
+        }
     }
 
 }

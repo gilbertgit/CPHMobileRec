@@ -4,12 +4,15 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import java.util.ArrayList;
+
 /**
  * Created by titan on 4/10/16.
  */
 public class DBVehicleEntry {
     public static final String VEHICLE_ENTRY_TABLE_NAME = "vehicleentry";
     public static final String VEHICLE_ENTRY_COLUMN_ID = "id";
+    public static final String VEHICLE_ENTRY_COLUMN_USER_ID = "userId";
     public static final String VEHICLE_ENTRY_COLUMN_VIN = "vin";
     public static final String VEHICLE_ENTRY_COLUMN_DEALERSHIP = "dealership";
     public static final String VEHICLE_ENTRY_COLUMN_NEW_USED = "newused";
@@ -19,7 +22,7 @@ public class DBVehicleEntry {
     public static final String VEHICLE_ENTRY_COLUMN_TIME = "time";
     public static final String VEHICLE_ENTRY_COLUMN_NOTES = "notes";
 
-    public static boolean insertVehicleEntry(DBHelper dbh, String vin, String dealership, String newUsed, String entryType, String lot, String date, String time)
+    public static boolean insertVehicleEntry(DBHelper dbh, String vin, String dealership, String newUsed, String entryType, String lot, String date, String time, String userId)
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -31,6 +34,7 @@ public class DBVehicleEntry {
         contentValues.put(VEHICLE_ENTRY_COLUMN_DATE, date);
         contentValues.put(VEHICLE_ENTRY_COLUMN_TIME, time);
         contentValues.put(VEHICLE_ENTRY_COLUMN_NOTES, "");
+        contentValues.put(VEHICLE_ENTRY_COLUMN_USER_ID, userId);
 
         db.insertWithOnConflict(VEHICLE_ENTRY_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
 
@@ -38,7 +42,7 @@ public class DBVehicleEntry {
         return true;
     }
 
-    public static boolean updateVehicleEntry(DBHelper dbh, String vin, String dealership, String newUsed, String entryType, String lot, String date, String time, String notes)
+    public static boolean updateVehicleEntry(DBHelper dbh, String vin, String dealership, String newUsed, String entryType, String lot, String date, String time, String notes, String userId)
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -49,6 +53,7 @@ public class DBVehicleEntry {
         contentValues.put(VEHICLE_ENTRY_COLUMN_DATE, date);
         contentValues.put(VEHICLE_ENTRY_COLUMN_TIME, time);
         contentValues.put(VEHICLE_ENTRY_COLUMN_NOTES, notes);
+        contentValues.put(VEHICLE_ENTRY_COLUMN_USER_ID, userId);
 
         db.update(VEHICLE_ENTRY_TABLE_NAME, contentValues, "vin = ?", new String[]{vin});
         return true;
@@ -104,10 +109,26 @@ public class DBVehicleEntry {
         return res;
     }
 
+    public static Cursor getPhysicalByUser(DBHelper dbh, String user){
+        SQLiteDatabase db = dbh.getReadableDatabase();
+//        Cursor res =  db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by id DESC" , new String[] {dealership});
+
+        Cursor res =  db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_USER_ID + " = ? order by date DESC, time DESC" , new String[] {user});
+        return res;
+    }
+
     public static void clearPhysicalTable(DBHelper dbh)
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
         db.execSQL("DELETE FROM " + VEHICLE_ENTRY_TABLE_NAME );
+    }
+
+    public static void clearPhysicalTableByUser(DBHelper dbh, String user)
+    {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        db.delete(VEHICLE_ENTRY_TABLE_NAME,
+                VEHICLE_ENTRY_COLUMN_USER_ID + " = ? ",
+                new String[] {user});
     }
 
     public static void removePhysicalByVin(DBHelper dbh, String vin)
@@ -117,5 +138,49 @@ public class DBVehicleEntry {
         db.delete(VEHICLE_ENTRY_TABLE_NAME,
                 VEHICLE_ENTRY_COLUMN_VIN + " = ? ",
                 new String[] {vin});
+    }
+
+    public static ArrayList GetPhysicalForUpload(DBHelper dbh, String user) {
+
+        ArrayList physical = new ArrayList();
+
+        Cursor c = DBVehicleEntry.getPhysicalByUser(dbh, user);
+
+        if (c.moveToFirst()) {
+            do {
+                int vinIndex = c.getColumnIndex("vin");
+                String vin = c.getString(vinIndex);
+
+                int dealershipIndex = c.getColumnIndex("dealership");
+                String dealership = c.getString(dealershipIndex);
+
+                int newUsedIndex = c.getColumnIndex("newused");
+                String newUsed = c.getString(newUsedIndex);
+
+                int entryTypeIndex = c.getColumnIndex("entrytype");
+                String entryType = c.getString(entryTypeIndex);
+
+                int lotIndex = c.getColumnIndex("lot");
+                String lot = c.getString(lotIndex);
+
+                int dateIndex = c.getColumnIndex("date");
+                String date = c.getString(dateIndex);
+
+                int timeIndex = c.getColumnIndex("time");
+                String time = c.getString(timeIndex);
+
+                int notesIndex = c.getColumnIndex("notes");
+                String notes = c.getString(notesIndex);
+
+                int userIdIndex = c.getColumnIndex("userid");
+                String userId = c.getString(userIdIndex);
+
+                Physical phy = new Physical(vin, dealership, entryType, newUsed, date, time, lot, notes, userId);
+                physical.add(phy);
+            } while (c.moveToNext());
+        }
+        c.close();
+
+        return  physical;
     }
 }

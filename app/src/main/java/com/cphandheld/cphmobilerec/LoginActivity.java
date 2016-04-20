@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Gravity;
@@ -69,19 +70,27 @@ public class LoginActivity extends ActionBarActivity {
     DBHelper dbHelper;
     JSONArray dealershipResults;
 
+    private String android_id;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        android_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        Utilities.androidId = android_id;
 
         dbHelper = new DBHelper(LoginActivity.this);
         dbHelper.getWritableDatabase();
 
         // Restore preferences
         SharedPreferences settings = getSharedPreferences(PREFS_FILE, 0);
+        SharedPreferences.Editor editor = settings.edit();
         organizationId = settings.getInt("orgId", -1);
         organizationName = settings.getString("orgName", "");
-       // Utilities.SetAppUrl(settings.getString("appUrl", ""));
+        editor.putString("androidId", android_id);
+        editor.commit();
 
         String versionName = com.cphandheld.cphmobilerec.BuildConfig.VERSION_NAME;
         textVersion = (TextView) findViewById(R.id.textVersion);

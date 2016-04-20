@@ -155,7 +155,7 @@ public class EditEntryActivity extends ActionBarActivity {
                 SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
                 String formattedDate = df.format(c.getTime());
                 String formattedTime = tf.format(c.getTime());
-                DBVehicleEntry.updateVehicleEntry(dbHelper, sentVin, sentDealership, sentNewUsed, sentEntryType, sentLot, formattedDate, formattedTime, editTextNotes.getText().toString());
+                DBVehicleEntry.updateVehicleEntry(dbHelper, sentVin, sentDealership, sentNewUsed, sentEntryType, sentLot, formattedDate, formattedTime, editTextNotes.getText().toString(), String.valueOf(Utilities.currentUser.Id));
                 Intent i = new Intent(EditEntryActivity.this, PhysicalActivity.class);
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(i);

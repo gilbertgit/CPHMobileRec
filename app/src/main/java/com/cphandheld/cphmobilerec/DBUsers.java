@@ -104,4 +104,59 @@ public class DBUsers {
         Cursor res =  db.rawQuery( "select * from " + DEALERSHIPS_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_USER_ID + " = ? order by id DESC" , new String[] {userId});
         return res;
     }
+
+    public static Dealership setDealershipData(Cursor c)
+    {
+        int dealershipIdIndex = c.getColumnIndex("id");
+        int dealershipId = c.getInt(dealershipIdIndex);
+
+        int nameIndex = c.getColumnIndex("name");
+        String dealershipName = c.getString(nameIndex);
+
+        int dealerCodeIndex = c.getColumnIndex("dealercode");
+        String dealerCode = c.getString(dealerCodeIndex);
+
+        int lot1NameIndex = c.getColumnIndex("lot1name");
+        String lot1Name = c.getString(lot1NameIndex);
+
+        int lot2NameIndex = c.getColumnIndex("lot2name");
+        String lot2Name = c.getString(lot2NameIndex);
+
+        int lot3NameIndex = c.getColumnIndex("lot3name");
+        String lot3Name = c.getString(lot3NameIndex);
+
+        int lot4NameIndex = c.getColumnIndex("lot4name");
+        String lot4Name = c.getString(lot4NameIndex);
+
+        int lot5NameIndex = c.getColumnIndex("lot5name");
+        String lot5Name = c.getString(lot5NameIndex);
+
+        int lot6NameIndex = c.getColumnIndex("lot6name");
+        String lot6Name = c.getString(lot6NameIndex);
+
+        int lot7NameIndex = c.getColumnIndex("lot7name");
+        String lot7Name = c.getString(lot7NameIndex);
+
+        int lot8NameIndex = c.getColumnIndex("lot8name");
+        String lot8Name = c.getString(lot8NameIndex);
+
+        int lot9NameIndex = c.getColumnIndex("lot9name");
+        String lot9Name = c.getString(lot9NameIndex);
+
+        Dealership dealership = new Dealership();
+        dealership.Id = dealershipId;
+        dealership.Name = dealershipName;
+        dealership.DealerCode = dealerCode;
+        dealership.Lot1Name = lot1Name;
+        dealership.Lot2Name = lot2Name;
+        dealership.Lot3Name = lot3Name;
+        dealership.Lot4Name = lot4Name;
+        dealership.Lot5Name = lot5Name;
+        dealership.Lot6Name = lot6Name;
+        dealership.Lot7Name = lot7Name;
+        dealership.Lot8Name = lot8Name;
+        dealership.Lot9Name = lot9Name;
+
+        return dealership;
+    }
 }

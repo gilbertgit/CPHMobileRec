@@ -27,9 +27,11 @@ public class Utilities {
     public static final String InventoryUploadURL = "inventory/upload";
     public static final String LoginURL = "dealerships/getbypin/";
 
+
     public static List<Dealership> dealerships;
     public static User currentUser = new User();
     public static HashMap<String, String> keyCodeMap;
+    public static String androidId = "";
 
     public static String StreamToString(InputStreamReader isr) throws IOException
     {

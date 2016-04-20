@@ -59,7 +59,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
         db.execSQL("create table " + USER_TABLE_NAME + " (id integer primary key, firstname text, lastname text, pin text)");
         db.execSQL("create table " + ORGANIZATION_TABLE_NAME + " ( id integer primary key autoincrement, organizationId text, name text)");
-        db.execSQL("create table " + VEHICLE_ENTRY_TABLE_NAME + " ( id integer primary key autoincrement, vin text, dealership text, newused                text, entrytype text, lot text, date text, time text, notes text)");
+        db.execSQL("create table " + VEHICLE_ENTRY_TABLE_NAME + " ( id integer primary key autoincrement, vin text, dealership text, newused                text, entrytype text, lot text, date text, time text, notes text, userid text)");
         db.execSQL("create table " + DEALERSHIPS_TABLE_NAME + " (id integer primary key, userid text, dealercode text, name text, lot1name text, lot2name text, lot3name text, lot4name text, lot5name text, lot6name text, lot7name text, lot8name text, lot9name text)");
     }
 
@@ -150,10 +150,11 @@ public class DBHelper extends SQLiteOpenHelper {
         try {
             file.createNewFile();
             CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+            dbHelper.getReadableDatabase();
             Cursor curCSV = sqdb.rawQuery("SELECT * FROM " + VEHICLE_ENTRY_TABLE_NAME, null);
             csvWrite.writeNext(curCSV.getColumnNames());
             while (curCSV.moveToNext()) {
-                //Which column you want to exprort
+                //Which column you want to export
                 String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
                 csvWrite.writeNext(arrStr);
             }

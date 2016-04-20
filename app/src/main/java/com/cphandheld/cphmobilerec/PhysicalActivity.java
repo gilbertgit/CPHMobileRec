@@ -35,6 +35,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonParser;
 import com.symbol.emdk.EMDKManager;
 import com.symbol.emdk.EMDKManager.EMDKListener;
 import com.symbol.emdk.EMDKResults;
@@ -60,6 +61,8 @@ import java.util.List;
  * Created by titan on 4/8/16.
  */
 public class PhysicalActivity extends ActionBarActivity implements EMDKListener, AbsListView.OnScrollListener {
+
+    private String TAG = "PhysicalActivity";
 
     Spinner spinnerNewUsed;
     Spinner spinnerLot;
@@ -181,6 +184,21 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
         //GetDealershipsDB();
 
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i(TAG, "onActivityResult");
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1) {
+            if (resultCode == RESULT_OK) {
+                Boolean backPress = data.getBooleanExtra("back", false);
+
+                if (backPress) {
+
+                }
+            }
+        }
     }
 
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
@@ -405,71 +423,23 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         if (c.moveToFirst()) {
             do {
 
-                int dealershipIdIndex = c.getColumnIndex("id");
-                int dealershipId = c.getInt(dealershipIdIndex);
-
-                int nameIndex = c.getColumnIndex("name");
-                String dealershipName = c.getString(nameIndex);
-
-                int dealerCodeIndex = c.getColumnIndex("dealercode");
-                String dealerCode = c.getString(dealerCodeIndex);
-
-                int lot1NameIndex = c.getColumnIndex("lot1name");
-                String lot1Name = c.getString(lot1NameIndex);
-
-                int lot2NameIndex = c.getColumnIndex("lot2name");
-                String lot2Name = c.getString(lot2NameIndex);
-
-                int lot3NameIndex = c.getColumnIndex("lot3name");
-                String lot3Name = c.getString(lot3NameIndex);
-
-                int lot4NameIndex = c.getColumnIndex("lot4name");
-                String lot4Name = c.getString(lot4NameIndex);
-
-                int lot5NameIndex = c.getColumnIndex("lot5name");
-                String lot5Name = c.getString(lot5NameIndex);
-
-                int lot6NameIndex = c.getColumnIndex("lot6name");
-                String lot6Name = c.getString(lot6NameIndex);
-
-                int lot7NameIndex = c.getColumnIndex("lot7name");
-                String lot7Name = c.getString(lot7NameIndex);
-
-                int lot8NameIndex = c.getColumnIndex("lot8name");
-                String lot8Name = c.getString(lot8NameIndex);
-
-                int lot9NameIndex = c.getColumnIndex("lot9name");
-                String lot9Name = c.getString(lot9NameIndex);
-
-                Dealership dealership = new Dealership();
-                dealership.Id = dealershipId;
-                dealership.Name = dealershipName;
-                dealership.DealerCode = dealerCode;
-                dealership.Lot1Name = lot1Name;
-                dealership.Lot2Name = lot2Name;
-                dealership.Lot3Name = lot3Name;
-                dealership.Lot4Name = lot4Name;
-                dealership.Lot5Name = lot5Name;
-                dealership.Lot6Name = lot6Name;
-                dealership.Lot7Name = lot7Name;
-                dealership.Lot8Name = lot8Name;
-                dealership.Lot9Name = lot9Name;
+                Dealership d = DBUsers.setDealershipData(c);
 
                 if (c.getPosition() == 0) {
-                    lotList.add(lot1Name);
-                    lotList.add(lot2Name);
-                    lotList.add(lot3Name);
-                    lotList.add(lot4Name);
-                    lotList.add(lot5Name);
-                    lotList.add(lot6Name);
-                    lotList.add(lot7Name);
-                    lotList.add(lot8Name);
-                    lotList.add(lot9Name);
+                    lotList.add(d.Lot1Name);
+                    lotList.add(d.Lot2Name);
+                    lotList.add(d.Lot3Name);
+                    lotList.add(d.Lot4Name);
+                    lotList.add(d.Lot5Name);
+                    lotList.add(d.Lot6Name);
+                    lotList.add(d.Lot7Name);
+                    lotList.add(d.Lot8Name);
+                    lotList.add(d.Lot9Name);
                 }
 
-                dealershipList.add(dealership);
+                dealershipList.add(d);
 
-                spinnerDealershipMap.put(dealershipName, dealerCode);
+                spinnerDealershipMap.put(d.Name, d.DealerCode);
 
             } while (c.moveToNext());
         }
@@ -542,7 +512,29 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 startActivity(i);
                 break;
             case R.id.action_upload:
-                new UploadTask().execute();
+                AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
+                builder.setTitle("Upload Physical Inventory");
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        new UploadTask().execute();
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        //TODO
+                        dialog.dismiss();
+                    }
+                });
+                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
                 break;
         }
 
@@ -586,10 +578,13 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                                     PhysicalActivity.this, android.R.anim.slide_in_left
                             );
                             anim.setDuration(500);
-                            vehicleList.getChildAt(1).startAnimation(anim);
+                            if(listAdapter.getCount() > 0)
+                                vehicleList.getChildAt(1).startAnimation(anim);
+                            else
+                                vehicleList.getChildAt(0).startAnimation(anim);
 
-                            phys.add(0, new Physical(barcode, selectedDealership, "Scanned", selectedValueNewUsed, formattedDate, formattedTime, selectedLot, ""));
-                            DBVehicleEntry.insertVehicleEntry(dbHelper, barcode, selectedDealership, selectedValueNewUsed, "Scanned", selectedLot, formattedDate, formattedTime);
+                            phys.add(0, new Physical(barcode, selectedDealership, "Scanned", selectedValueNewUsed, formattedDate, formattedTime, selectedLot, "", String.valueOf(Utilities.currentUser.Id)));
+                            DBVehicleEntry.insertVehicleEntry(dbHelper, barcode, selectedDealership, selectedValueNewUsed, "Scanned", selectedLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
 
                             textCount.setText("Count(" + vehicleList.getCount() + ")");
                             vehicleList.smoothScrollToPosition(0);
@@ -604,6 +599,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                                 }
 
                             }, anim.getDuration());
+
 
                             //vehicleList.setLayoutAnimation();
                         }
@@ -641,14 +637,12 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     }
 
     public void GetPhysicalDB(boolean firstLoad) {
-        //if (firstLoad) {
+
         phys = new ArrayList();
         listAdapter = new PhysicalListAdapter(PhysicalActivity.this, 0, phys, mTouchListener);
         vehicleList.setAdapter(listAdapter);
-        //}
 
         Cursor c = DBVehicleEntry.getPhysicalByDealership(dbHelper, selectedDealership);
-        //Cursor c = DBVehicleEntry.getPhysical(dbHelper);
 
         if (c.moveToFirst()) {
             do {
@@ -676,15 +670,16 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 int notesIndex = c.getColumnIndex("notes");
                 String notes = c.getString(notesIndex);
 
-                Physical phy = new Physical(vin, dealership, entryType, newUsed, date, time, lot, notes);
+                int userIdIndex = c.getColumnIndex("userid");
+                String userId = c.getString(userIdIndex);
+
+                Physical phy = new Physical(vin, dealership, entryType, newUsed, date, time, lot, notes, userId);
                 phys.add(phy);
             } while (c.moveToNext());
         }
         c.close();
 
         if (phys != null && phys.size() > 0) {
-            //PhysicalListAdapter pa = new PhysicalListAdapter(PhysicalActivity.this, 0, phys);
-            //vehicleList.setAdapter(pa);
             listAdapter.notifyDataSetChanged();
 
             textCount.setText("Count: " + listAdapter.getCount());
@@ -744,37 +739,44 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
     }
 
-    private class UploadTask extends AsyncTask<String, Void, Void> {
+    private class UploadTask extends AsyncTask<String, Void, Boolean> {
         @Override
         protected void onPreExecute() {
             inventoryData = "";
             Gson gson = new Gson();
-            //String json = gson.toJson(cip);
+            ArrayList physical = DBVehicleEntry.GetPhysicalForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
 
-            if (!phys.equals(null) && phys.size() != 0) {
-                inventoryData += "{Inventory:[";
-                for (int i = 0; i < phys.size(); i++) {
-                    String json = gson.toJson(phys.get(i));
+            if (!physical.equals(null) && physical.size() != 0) {
+                inventoryData += "{\"Inventory\":[";
+                for (int i = 0; i < physical.size(); i++) {
+                    String json = gson.toJson(physical.get(i));
                     inventoryData += json;
-                    inventoryData += ",";
+                    if(i != physical.size()-1)
+                        inventoryData += ",";
                 }
                 inventoryData += "]}";
             }
-
         }
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected Boolean doInBackground(String... params) {
             errorMessage = "";
 
-            UploadInventoryPost();
-
-            return null;
+            return UploadInventoryPost();
         }
 
         @Override
-        protected void onPostExecute(Void unused) {
-//
+        protected void onPostExecute(Boolean result) {
+
+            if(result)
+            {
+                dbHelper.ExportDB(getApplicationContext());
+                DBVehicleEntry.clearPhysicalTableByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+                phys.clear();
+                listAdapter.notifyDataSetChanged();
+                textCount.setText("Count(" + vehicleList.getCount() + ")");
+            }
+
 //            if (!errorMessage.equals(""))
 //                Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
         }
@@ -790,6 +792,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
             try {
                 if (!inventoryData.equals(null) && inventoryData != "") {
+
 
                     String json = inventoryData;
                     String address = Utilities.AppDevURL + Utilities.InventoryUploadURL;
@@ -811,8 +814,8 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                     int code = connection.getResponseCode();
 
                     if (code == 204) {
-                        dbHelper.ExportDB(getApplicationContext());
-                        DBVehicleEntry.clearPhysicalTable(dbHelper);
+//                        dbHelper.ExportDB(getApplicationContext());
+//                        DBVehicleEntry.clearPhysicalTable(dbHelper);
                         return true;
                     } else {
                         isr = new InputStreamReader(connection.getErrorStream());

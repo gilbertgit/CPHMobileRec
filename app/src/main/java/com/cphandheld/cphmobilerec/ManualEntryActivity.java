@@ -12,6 +12,7 @@ import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.Html;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -88,6 +89,15 @@ public class ManualEntryActivity extends ActionBarActivity {
         mKeyboardView.setOnKeyboardActionListener(mOnKeyboardActionListener);
     }
 
+    public void onBackPressed()
+    {
+        Intent i = new Intent(this, PhysicalActivity.class);
+        i.putExtra("back", true);
+        setResult(RESULT_OK, i);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(i);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -108,7 +118,7 @@ public class ManualEntryActivity extends ActionBarActivity {
                 SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
                 String formattedDate = df.format(c.getTime());
                 String formattedTime = tf.format(c.getTime());
-                DBVehicleEntry.insertVehicleEntry(dbHelper, editTextVin.getText().toString(),sentDealership, sentNewUsed, "Manual", sentLot, formattedDate, formattedTime );
+                DBVehicleEntry.insertVehicleEntry(dbHelper, editTextVin.getText().toString(),sentDealership, sentNewUsed, "Manual", sentLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
                 Intent i = new Intent(ManualEntryActivity.this, PhysicalActivity.class);
                 startActivity(i);
                 break;

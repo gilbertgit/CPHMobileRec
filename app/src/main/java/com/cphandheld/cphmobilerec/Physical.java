@@ -14,9 +14,10 @@ public class Physical {
     private String Lot;
     private String Notes;
     private String TimeStamp;
+    private String UserId;
 
 
-    public Physical( String vin, String dealership, String entryType, String newUsed, String date, String time, String lot, String notes) {
+    public Physical( String vin, String dealership, String entryType, String newUsed, String date, String time, String lot, String notes, String userId) {
         VIN = vin;
         DealerCode = dealership;
         ScanMethod = entryType;
@@ -26,6 +27,7 @@ public class Physical {
         Lot = lot;
         Notes = notes;
         TimeStamp = date + " " + time;
+        UserId = userId;
     }
 
     public String getVIN() {

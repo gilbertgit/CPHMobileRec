@@ -2,6 +2,7 @@ package com.cphandheld.cphmobilerec;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,6 +16,7 @@ import android.os.Handler;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,6 +35,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
@@ -87,6 +90,8 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     String selectedValueNewUsed;
     String selectedLot;
     String inventoryData;
+    int dealershipSelection = 0;
+    String lotSelection = "";
     ArrayList dealershipList = new ArrayList();
     ArrayAdapter<Dealership> dealershipAdapter;
     ArrayList<String> lotList = new ArrayList<String>();
@@ -94,9 +99,11 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
     final HashMap<String, String> spinnerNewUsedMap = new HashMap<String, String>();
     final HashMap<String, String> spinnerDealershipMap = new HashMap<String, String>();
+    List<String> listNewUsed = new ArrayList<String>();
 
     DBHelper dbHelper;
     RelativeLayout headerLayout;
+    ProgressDialog mProgressDialog;
 
     private int lastTopValue = 0;
 
@@ -123,6 +130,13 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>PHYSICAL SCAN</font>"));
         actionBar.show();
 
+        mProgressDialog = new ProgressDialog(PhysicalActivity.this);
+        mProgressDialog.setIndeterminate(false);
+        mProgressDialog.setCanceledOnTouchOutside(false);
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        mProgressDialog.setTitle("Uploading Inventory...");
+        mProgressDialog.setMessage("Hold on a sec...");
+
         dbHelper = new DBHelper(PhysicalActivity.this);
         dbHelper.getWritableDatabase();
 
@@ -148,7 +162,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         spinnerLot = (Spinner) findViewById(R.id.spinnerLot);
         textCount = (TextView) findViewById(R.id.textCount);
 
-        List<String> listNewUsed = new ArrayList<String>();
         listNewUsed.add("New");
         listNewUsed.add("Used");
         listNewUsed.add("Loaner");
@@ -186,19 +199,33 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
     }
 
+    public void onBackPressed() {
+        Toast toast = Toast.makeText(getApplicationContext(), "Logged out", Toast.LENGTH_SHORT);
+        toast.setGravity(Gravity.BOTTOM, 0, 75);
+        toast.show();
+
+        Intent i = new Intent(this, LoginActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(i);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.i(TAG, "onActivityResult");
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1) {
-            if (resultCode == RESULT_OK) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 2) {
                 Boolean backPress = data.getBooleanExtra("back", false);
-
                 if (backPress) {
-
+                    dealershipSelection = data.getIntExtra("dealership", 0);
+                    String newUsed = data.getStringExtra("newUsed");
+                    lotSelection = data.getStringExtra("lot");
+                    spinnerNewUsed.setSelection(listNewUsed.indexOf(newUsed));
                 }
             }
         }
+
     }
 
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
@@ -340,7 +367,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 int position = vehicleList.getPositionForView(mViewToRemove);
                 DBVehicleEntry.removePhysicalByVin(dbHelper, listAdapter.getItem(position - 1).getVIN());
                 listAdapter.remove(listAdapter.getItem(position - 1));
-                textCount.setText("Count: " + listAdapter.getCount());
+                textCount.setText("Count( " + phys.size() + ")");
                 dialog.dismiss();
             }
         });
@@ -451,14 +478,23 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             dealershipAdapter = new ArrayAdapter<Dealership>(this, R.layout.generic_list, dealershipList);
             dealershipAdapter.setDropDownViewResource(R.layout.generic_list);
             spinnerDealership.setAdapter(dealershipAdapter);
+
+            if (dealershipSelection == 0)
+                spinnerDealership.setSelection(0);
+            else {
+                Log.v("dealershipSelection:", String.valueOf(dealershipSelection));
+                spinnerDealership.setSelection(dealershipSelection, true);
+            }
+
             spinnerDealership.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
                 @Override
                 public void onItemSelected(AdapterView<?> arg0, View arg1,
                                            int arg2, long arg3) {
                     selectedDealership = spinnerDealershipMap.get(spinnerDealership.getSelectedItem().toString());
-                    //lotList = new ArrayList<String>(9);
+
                     lotList.clear();
+
                     if (!dealershipAdapter.getItem(arg2).Lot1Name.equals(""))
                         lotList.add(dealershipAdapter.getItem(arg2).Lot1Name);
                     if (!dealershipAdapter.getItem(arg2).Lot2Name.equals(""))
@@ -487,7 +523,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
                 }
             });
-            spinnerDealership.setSelection(0);
         }
     }
 
@@ -507,9 +542,10 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             case R.id.action_manual:
                 Intent i = new Intent(PhysicalActivity.this, ManualEntryActivity.class);
                 i.putExtra("extraDealership", selectedDealership);
+                i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
                 i.putExtra("extraLot", selectedLot);
                 i.putExtra("extraNewUsed", selectedValueNewUsed);
-                startActivity(i);
+                startActivityForResult(i, 2);
                 break;
             case R.id.action_upload:
                 AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
@@ -578,7 +614,9 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                                     PhysicalActivity.this, android.R.anim.slide_in_left
                             );
                             anim.setDuration(500);
-                            if(listAdapter.getCount() > 0)
+
+                            int count = listAdapter.getCount();
+                            if (count > 0)
                                 vehicleList.getChildAt(1).startAnimation(anim);
                             else
                                 vehicleList.getChildAt(0).startAnimation(anim);
@@ -586,7 +624,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                             phys.add(0, new Physical(barcode, selectedDealership, "Scanned", selectedValueNewUsed, formattedDate, formattedTime, selectedLot, "", String.valueOf(Utilities.currentUser.Id)));
                             DBVehicleEntry.insertVehicleEntry(dbHelper, barcode, selectedDealership, selectedValueNewUsed, "Scanned", selectedLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
 
-                            textCount.setText("Count(" + vehicleList.getCount() + ")");
+                            textCount.setText("Count(" + phys.size() + ")");
                             vehicleList.smoothScrollToPosition(0);
 
                             new Handler().postDelayed(new Runnable() {
@@ -611,12 +649,18 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         };
         //Register our receiver.
         this.registerReceiver(EMDKReceiver, intentFilter);
+
         GetDealershipsDB();
 
         lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, lotList);
         lotAdapter.setDropDownViewResource(R.layout.generic_list);
         spinnerLot.setAdapter(lotAdapter);
-        spinnerLot.setSelection(0);
+
+        if (lotSelection.equals(""))
+            spinnerLot.setSelection(0);
+        else
+            spinnerLot.setSelection(lotList.indexOf(lotSelection), true);
+
         selectedLot = spinnerLot.getSelectedItem().toString();
         spinnerLot.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
@@ -681,9 +725,9 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
         if (phys != null && phys.size() > 0) {
             listAdapter.notifyDataSetChanged();
-
-            textCount.setText("Count: " + listAdapter.getCount());
         }
+
+        textCount.setText("Count(" + phys.size() + ")");
     }
 
     @Override
@@ -740,18 +784,24 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     }
 
     private class UploadTask extends AsyncTask<String, Void, Boolean> {
+
+        int inventoryCount;
+        int duplicateCount;
+        int badVinCount;
+
         @Override
         protected void onPreExecute() {
+            mProgressDialog.show();
             inventoryData = "";
             Gson gson = new Gson();
             ArrayList physical = DBVehicleEntry.GetPhysicalForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
 
             if (!physical.equals(null) && physical.size() != 0) {
-                inventoryData += "{\"Inventory\":[";
+                inventoryData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"ScannerSerialNumber\":\"" + Utilities.androidId + "\",\"Inventory\":[";
                 for (int i = 0; i < physical.size(); i++) {
                     String json = gson.toJson(physical.get(i));
                     inventoryData += json;
-                    if(i != physical.size()-1)
+                    if (i != physical.size() - 1)
                         inventoryData += ",";
                 }
                 inventoryData += "]}";
@@ -768,17 +818,34 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         @Override
         protected void onPostExecute(Boolean result) {
 
-            if(result)
-            {
+            if (result) {
+
                 dbHelper.ExportDB(getApplicationContext());
                 DBVehicleEntry.clearPhysicalTableByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
                 phys.clear();
                 listAdapter.notifyDataSetChanged();
-                textCount.setText("Count(" + vehicleList.getCount() + ")");
-            }
+                textCount.setText("Count(" + phys.size() + ")");
 
-//            if (!errorMessage.equals(""))
-//                Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
+                mProgressDialog.dismiss();
+
+                AlertDialog alertDialog = new AlertDialog.Builder(PhysicalActivity.this).create();
+                alertDialog.setTitle("Upload Results");
+                String alert1 = "Inventory count: " + inventoryCount;
+                String alert2 = "Duplicate count: " + duplicateCount;
+                String alert3 = "Bad VIN count: " + badVinCount;
+                alertDialog.setMessage(alert1 +"\n"+ alert2 +"\n"+ alert3);
+                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        });
+                alertDialog.show();
+            }
+            else
+            {
+                mProgressDialog.dismiss();
+            }
         }
 
         private boolean UploadInventoryPost() {
@@ -813,9 +880,14 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
                     int code = connection.getResponseCode();
 
-                    if (code == 204) {
-//                        dbHelper.ExportDB(getApplicationContext());
-//                        DBVehicleEntry.clearPhysicalTable(dbHelper);
+                    if (code == 200) {
+
+                        isr = new InputStreamReader(connection.getInputStream());
+                        result = Utilities.StreamToString(isr);
+                        responseData = new JSONObject(result);
+                        inventoryCount = responseData.getInt("InventoryCount");
+                        duplicateCount = responseData.getInt("DuplicateCount");
+                        badVinCount = responseData.getInt("BadVinCount");
                         return true;
                     } else {
                         isr = new InputStreamReader(connection.getErrorStream());

@@ -37,6 +37,7 @@ public class ManualEntryActivity extends ActionBarActivity {
     DBHelper dbHelper;
 
     String sentDealership;
+    int sentDealershipIndex;
     String sentLot;
     String sentNewUsed;
 
@@ -51,6 +52,7 @@ public class ManualEntryActivity extends ActionBarActivity {
 
         Intent intent = getIntent();
         sentDealership = intent.getStringExtra("extraDealership");
+        sentDealershipIndex = intent.getIntExtra("extraDealershipIndex", 0);
         sentLot = intent.getStringExtra("extraLot");
         sentNewUsed = intent.getStringExtra("extraNewUsed");
 
@@ -89,13 +91,18 @@ public class ManualEntryActivity extends ActionBarActivity {
         mKeyboardView.setOnKeyboardActionListener(mOnKeyboardActionListener);
     }
 
+    @Override
     public void onBackPressed()
     {
         Intent i = new Intent(this, PhysicalActivity.class);
         i.putExtra("back", true);
+        i.putExtra("dealership", sentDealershipIndex);
+        i.putExtra("newUsed", sentNewUsed);
+        i.putExtra("lot", sentLot);
         setResult(RESULT_OK, i);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(i);
+        //startActivityForResult(i, 2);
+        finish();
     }
 
     @Override
@@ -120,7 +127,13 @@ public class ManualEntryActivity extends ActionBarActivity {
                 String formattedTime = tf.format(c.getTime());
                 DBVehicleEntry.insertVehicleEntry(dbHelper, editTextVin.getText().toString(),sentDealership, sentNewUsed, "Manual", sentLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
                 Intent i = new Intent(ManualEntryActivity.this, PhysicalActivity.class);
-                startActivity(i);
+                i.putExtra("dealership", sentDealershipIndex);
+                i.putExtra("newUsed", sentNewUsed);
+                i.putExtra("lot", sentLot);
+                setResult(RESULT_OK, i);
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                finish();
+                //startActivity(i);
                 break;
         }
 

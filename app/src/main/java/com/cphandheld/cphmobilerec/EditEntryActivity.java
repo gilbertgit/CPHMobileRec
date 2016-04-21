@@ -43,6 +43,8 @@ public class EditEntryActivity extends ActionBarActivity {
     final HashMap<String,String> spinnerDealershipMap = new HashMap<String, String>();
     ArrayList dealershipList = new ArrayList();
     ArrayAdapter<Dealership> dealershipAdapter;
+    ArrayAdapter<String> lotAdapter;
+    List<String> lotList = new ArrayList<String>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,13 +106,10 @@ public class EditEntryActivity extends ActionBarActivity {
             }
         });
 
-        List<String> listLot = new ArrayList<String>();
-        listLot.add("Lot 1");
-        listLot.add("Lot 2");
-        listLot.add("Lot 3");
+        GetDealershipsDB();
+        spinnerDealership.setSelection(sentDealerPos);
 
-
-        ArrayAdapter<String> lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, listLot);
+        lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, lotList);
         lotAdapter.setDropDownViewResource(R.layout.generic_list);
         spinnerLot.setAdapter(lotAdapter);
         int positionLot = lotAdapter.getPosition(sentLot);
@@ -130,9 +129,6 @@ public class EditEntryActivity extends ActionBarActivity {
 
             }
         });
-
-        GetDealershipsDB();
-        spinnerDealership.setSelection(sentDealerPos);
     }
 
     @Override
@@ -151,7 +147,7 @@ public class EditEntryActivity extends ActionBarActivity {
         switch (id) {
             case R.id.action_done:
                 Calendar c = Calendar.getInstance();
-                SimpleDateFormat df = new SimpleDateFormat("dd/MM/yy");
+                SimpleDateFormat df = new SimpleDateFormat("MM/dd/yy");
                 SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
                 String formattedDate = df.format(c.getTime());
                 String formattedTime = tf.format(c.getTime());
@@ -171,89 +167,69 @@ public class EditEntryActivity extends ActionBarActivity {
         startActivity(i);
     }
 
-    public void GetDealershipsDB()
-    {
+    public void GetDealershipsDB() {
         Cursor c = DBUsers.getDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
         dealershipList = new ArrayList(c.getCount());
         spinnerDealershipMap.clear();
-        int pos = 0;
 
         if (c.moveToFirst()) {
             do {
 
-                int dealershipIdIndex = c.getColumnIndex("id");
-                int dealershipId = c.getInt(dealershipIdIndex);
+                Dealership d = DBUsers.setDealershipData(c);
 
-                int nameIndex = c.getColumnIndex("name");
-                String dealershipName = c.getString(nameIndex);
+                if (c.getPosition() == 0) {
+                    lotList.add(d.Lot1Name);
+                    lotList.add(d.Lot2Name);
+                    lotList.add(d.Lot3Name);
+                    lotList.add(d.Lot4Name);
+                    lotList.add(d.Lot5Name);
+                    lotList.add(d.Lot6Name);
+                    lotList.add(d.Lot7Name);
+                    lotList.add(d.Lot8Name);
+                    lotList.add(d.Lot9Name);
+                }
 
-                int dealerCodeIndex = c.getColumnIndex("dealercode");
-                String dealerCode = c.getString(dealerCodeIndex);
+                dealershipList.add(d);
 
-                int lot1NameIndex = c.getColumnIndex("lot1name");
-                String lot1Name = c.getString(lot1NameIndex);
-
-                int lot2NameIndex = c.getColumnIndex("lot2name");
-                String lot2Name = c.getString(lot2NameIndex);
-
-                int lot3NameIndex = c.getColumnIndex("lot3name");
-                String lot3Name = c.getString(lot3NameIndex);
-
-                int lot4NameIndex = c.getColumnIndex("lot4name");
-                String lot4Name = c.getString(lot4NameIndex);
-
-                int lot5NameIndex = c.getColumnIndex("lot5name");
-                String lot5Name = c.getString(lot5NameIndex);
-
-                int lot6NameIndex = c.getColumnIndex("lot6name");
-                String lot6Name = c.getString(lot6NameIndex);
-
-                int lot7NameIndex = c.getColumnIndex("lot7name");
-                String lot7Name = c.getString(lot7NameIndex);
-
-                int lot8NameIndex = c.getColumnIndex("lot8name");
-                String lot8Name = c.getString(lot8NameIndex);
-
-                int lot9NameIndex = c.getColumnIndex("lot9name");
-                String lot9Name = c.getString(lot9NameIndex);
-
-                Dealership dealership = new Dealership();
-                dealership.Id = dealershipId;
-                dealership.Name = dealershipName;
-                dealership.DealerCode = dealerCode;
-                dealership.Lot1Name = lot1Name;
-                dealership.Lot2Name = lot2Name;
-                dealership.Lot3Name = lot3Name;
-                dealership.Lot4Name = lot4Name;
-                dealership.Lot5Name = lot5Name;
-                dealership.Lot6Name = lot6Name;
-                dealership.Lot7Name = lot7Name;
-                dealership.Lot8Name = lot8Name;
-                dealership.Lot9Name = lot9Name;
-
-                dealershipList.add(dealership);
-
-                spinnerDealershipMap.put(dealershipName, dealerCode);
-
-                if(sentDealership.equals(dealerCode))
-                    sentDealerPos = c.getPosition();
+                spinnerDealershipMap.put(d.Name, d.DealerCode);
 
             } while (c.moveToNext());
         }
         c.close();
 
         if (dealershipList != null && dealershipList.size() > 0) {
+            //lotAdapter.notifyDataSetChanged();
 
             dealershipAdapter = new ArrayAdapter<Dealership>(this, R.layout.generic_list, dealershipList);
             dealershipAdapter.setDropDownViewResource(R.layout.generic_list);
             spinnerDealership.setAdapter(dealershipAdapter);
-
             spinnerDealership.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
                 @Override
                 public void onItemSelected(AdapterView<?> arg0, View arg1,
                                            int arg2, long arg3) {
                     sentDealership = spinnerDealershipMap.get(spinnerDealership.getSelectedItem().toString());
+                    //lotList = new ArrayList<String>(9);
+                    lotList.clear();
+                    if (!dealershipAdapter.getItem(arg2).Lot1Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot1Name);
+                    if (!dealershipAdapter.getItem(arg2).Lot2Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot2Name);
+                    if (!dealershipAdapter.getItem(arg2).Lot3Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot3Name);
+                    if (!dealershipAdapter.getItem(arg2).Lot4Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot4Name);
+                    if (!dealershipAdapter.getItem(arg2).Lot5Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot5Name);
+                    if (!dealershipAdapter.getItem(arg2).Lot6Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot6Name);
+                    if (!dealershipAdapter.getItem(arg2).Lot7Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot7Name);
+                    if (!dealershipAdapter.getItem(arg2).Lot8Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot8Name);
+                    if (!dealershipAdapter.getItem(arg2).Lot9Name.equals(""))
+                        lotList.add(dealershipAdapter.getItem(arg2).Lot9Name);
+                    lotAdapter.notifyDataSetChanged();
                 }
 
                 @Override
@@ -262,6 +238,7 @@ public class EditEntryActivity extends ActionBarActivity {
 
                 }
             });
+            //spinnerDealership.setSelection(0);
         }
     }
 

@@ -61,6 +61,7 @@ public class OrganizationActivity  extends Activity
 
         mProgressDialog = new ProgressDialog(OrganizationActivity.this);
         mProgressDialog.setIndeterminate(false);
+        mProgressDialog.setCanceledOnTouchOutside(false);
         mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         mProgressDialog.setTitle("Fetching organizations...");
         mProgressDialog.setMessage("Just hold on a sec...");

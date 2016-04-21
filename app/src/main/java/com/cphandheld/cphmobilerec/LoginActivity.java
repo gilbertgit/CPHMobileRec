@@ -110,6 +110,7 @@ public class LoginActivity extends ActionBarActivity {
 
         mProgressDialog = new ProgressDialog(LoginActivity.this);
         mProgressDialog.setIndeterminate(false);
+        mProgressDialog.setCanceledOnTouchOutside(false);
         mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         mProgressDialog.setTitle("Verifying your credentials...");
         mProgressDialog.setMessage("Hold on a sec...");

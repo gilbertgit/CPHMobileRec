@@ -69,7 +69,7 @@ public class LoginActivity extends ActionBarActivity {
     boolean isAdmin = false;
     DBHelper dbHelper;
     JSONArray dealershipResults;
-
+    SharedPreferences.Editor editor;
     private String android_id;
 
     @Override
@@ -86,9 +86,10 @@ public class LoginActivity extends ActionBarActivity {
 
         // Restore preferences
         SharedPreferences settings = getSharedPreferences(PREFS_FILE, 0);
-        SharedPreferences.Editor editor = settings.edit();
+        editor = settings.edit();
         organizationId = settings.getInt("orgId", -1);
         organizationName = settings.getString("orgName", "");
+        Utilities.AppURL = settings.getString("appURL", "");
         editor.putString("androidId", android_id);
         editor.commit();
 
@@ -96,10 +97,10 @@ public class LoginActivity extends ActionBarActivity {
         textVersion = (TextView) findViewById(R.id.textVersion);
         textVersion.setText(versionName);
 
-        if (!organizationName.equals("")) {
-            textOrgName = (TextView) findViewById(R.id.textOrgName);
-            textOrgName.setText(organizationName.toUpperCase());
-        }
+//        if (!organizationName.equals("")) {
+//            textOrgName = (TextView) findViewById(R.id.textOrgName);
+//            textOrgName.setText(organizationName.toUpperCase());
+//        }
 
         imageEntry1 = (ImageView) findViewById(R.id.entry1);
         imageEntry2 = (ImageView) findViewById(R.id.entry2);
@@ -116,6 +117,19 @@ public class LoginActivity extends ActionBarActivity {
         mProgressDialog.setMessage("Hold on a sec...");
 
         setClickEvents();
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        if(Utilities.AppURL.equals(""))
+        {
+            Utilities.AppURL = getString(R.string.app_url);
+            editor.putString("appURL", Utilities.AppURL);
+            editor.commit();
+        }
     }
 
     protected void setClickEvents() {
@@ -264,7 +278,7 @@ public class LoginActivity extends ActionBarActivity {
             if (isAdmin) {
                 if (pin.equals(getString(R.string.admin_password))) {
                     Utilities.currentUser = new User();
-                    Intent i = new Intent(LoginActivity.this, OrganizationActivity.class);
+                    Intent i = new Intent(LoginActivity.this, AdminActivity.class);
                     startActivity(i);
                     return;
                 }
@@ -289,7 +303,7 @@ public class LoginActivity extends ActionBarActivity {
                     // Local Authentication
                     if (DBUsers.isUserStored(dbHelper, pin)) {
                         getStoredUser(pin);
-                        Intent i = new Intent(LoginActivity.this, PhysicalActivity.class);
+                        Intent i = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(i);
                     } else {
                         YoyoPin();
@@ -372,12 +386,12 @@ public class LoginActivity extends ActionBarActivity {
     }
 
     private void YoyoPin() {
-        imageEntry1.setImageResource(R.drawable.wrong_pin_x);
-        imageEntry2.setImageResource(R.drawable.wrong_pin_x);
-        imageEntry3.setImageResource(R.drawable.wrong_pin_x);
-        imageEntry4.setImageResource(R.drawable.wrong_pin_x);
-        imageEntry5.setImageResource(R.drawable.wrong_pin_x);
-        imageEntry6.setImageResource(R.drawable.wrong_pin_x);
+        imageEntry1.setImageResource(R.drawable.pin_x);
+        imageEntry2.setImageResource(R.drawable.pin_x);
+        imageEntry3.setImageResource(R.drawable.pin_x);
+        imageEntry4.setImageResource(R.drawable.pin_x);
+        imageEntry5.setImageResource(R.drawable.pin_x);
+        imageEntry6.setImageResource(R.drawable.pin_x);
 
         final Vibrator vibe = (Vibrator) LoginActivity.this.getSystemService(Context.VIBRATOR_SERVICE);
         vibe.vibrate(200);
@@ -427,7 +441,7 @@ public class LoginActivity extends ActionBarActivity {
         }, 1500);
     }
 
-    private class LoginTask extends AsyncTask<String, Void, Void> {
+    private class LoginTask extends AsyncTask<String, Void, Boolean> {
 
         @Override
         protected void onPreExecute() {
@@ -435,35 +449,35 @@ public class LoginActivity extends ActionBarActivity {
         }
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected Boolean doInBackground(String... params) {
             Utilities.currentUser = null;
-            if (LoginPost(Integer.parseInt(params[0]), params[1])) {
 
-                Intent i = new Intent(LoginActivity.this, PhysicalActivity.class);
-                startActivity(i);
-                return null;
-
-            }
-            return null;
+            return LoginPost(Integer.parseInt(params[0]), params[1]);
         }
 
         @Override
-        protected void onPostExecute(Void unused) {
+        protected void onPostExecute(Boolean result) {
 
-            ArrayList<Dealership> array = new Gson().fromJson(dealershipResults.toString(), new TypeToken<List<Dealership>>(){}.getType());
+            if(result) {
+                ArrayList<Dealership> array = new Gson().fromJson(dealershipResults.toString(), new TypeToken<List<Dealership>>() {
+                }.getType());
 
-            for(Dealership d : array)
-            {
-                DBUsers.insertDealership(dbHelper, Utilities.currentUser.Id, d.Id, d.Name, d.DealerCode, d.Lot1Name, d.Lot2Name, d.Lot3Name, d.Lot4Name, d.Lot5Name, d.Lot6Name, d.Lot7Name, d.Lot8Name, d.Lot9Name);
+                for (Dealership d : array) {
+                    DBUsers.insertDealership(dbHelper, Utilities.currentUser.Id, d.Id, d.Name, d.DealerCode, d.Lot1Name, d.Lot2Name, d.Lot3Name, d.Lot4Name, d.Lot5Name, d.Lot6Name, d.Lot7Name, d.Lot8Name, d.Lot9Name);
+                }
+
+                Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(i);
             }
 
-            if (Utilities.currentUser == null) {
-                Toast toast = Toast.makeText(getApplicationContext(), "Invalid PIN", Toast.LENGTH_SHORT);
-                toast.setGravity(Gravity.BOTTOM, 0, 75);
-                toast.show();
+                if (Utilities.currentUser == null) {
+                    Toast toast = Toast.makeText(getApplicationContext(), "Invalid PIN", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.BOTTOM, 0, 75);
+                    toast.show();
 
-                YoyoPin();
-            }
+                    YoyoPin();
+                }
+
             mProgressDialog.dismiss();
         }
 
@@ -479,7 +493,7 @@ public class LoginActivity extends ActionBarActivity {
             Gson gson = new Gson();
 
             try {
-                String address = Utilities.AppDevURL + Utilities.LoginURL + pin;
+                String address = Utilities.AppURL + Utilities.LoginURL + pin;
                 url = new URL(address);
                 connection = (HttpURLConnection) url.openConnection();
                 isr = new InputStreamReader(connection.getInputStream());

@@ -12,6 +12,7 @@
     <string name="datawedge_data_string">"com.motorolasolutions.emdk.datawedge.data_string"</string>
     <string name="datawedge_source">"com.motorolasolutions.emdk.datawedge.source"</string>
     <string name="scan_intent">"com.cphandheld.cphmobilerec.RECVRBI"</string>
+    <string name="app_url">http://mobileapi.cphandheld.com/</string>
 
     <string-array name="entry_type_array">
         <item>New</item>

@@ -4,14 +4,16 @@
   </characteristic>
   <characteristic type="Profile">
     <parm name="ProfileName" value="CPHMobile"/>
-    <parm name="ModifiedDate" value="2016-04-13 12:20:07"/>
+    <parm name="ModifiedDate" value="2016-05-31 19:11:19"/>
     <parm name="TargetSystemVersion" value="4.4"/>
+    
     
   <characteristic type="ActivitySelection" version="0.1">
       <parm name="emdk_name" value=""/>
       <characteristic type="Application">
         <parm name="package" value="com.cphandheld.cphmobilerec"/>
         <characteristic type="Activities">
+          <parm name="activity" value="RescanActivity"/>
           <parm name="activity" value="PhysicalActivity"/>
         </characteristic>
       </characteristic>

@@ -20,9 +20,8 @@ import java.util.ListIterator;
  */
 public class Utilities {
 
-    public static String AppURL = " http://mobileapi.cphandheld.com/";
-    public static String AppDevURL = " http://mobileapi-dev.cphandheld.com/";
-    //public static String AppDevURL = "/";
+    public static final String PREFS_FILE = "SharedPrefs";
+    public static String AppURL = "";
     public static final String OrganizationsURL = "Organizations";
     public static final String InventoryUploadURL = "inventory/upload";
     public static final String LoginURL = "dealerships/getbypin/";

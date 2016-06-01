@@ -327,8 +327,11 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                         i.putExtra("extraVin", listAdapter.getItem(position - 1).getVIN());
                         i.putExtra("extraEntryType", listAdapter.getItem(position - 1).getEntryType());
                         i.putExtra("extraNotes", listAdapter.getItem(position - 1).getNotes());
-                        // i.putExtra("extraDealerPos", dealershipAdapter.getPosition(listAdapter.getItem(position-1)));
-                        startActivity(i);
+                        i.putExtra("extraLotIndex", selectedLot);
+                        i.putExtra("extraNewUsedIndex", selectedValueNewUsed);
+                        i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
+                        //i.putExtra("extraDealerPos",  position-1);
+                        startActivityForResult(i, 2);
                     }
                 }
                 mItemPressed = false;
@@ -462,6 +465,17 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                     lotList.add(d.Lot7Name);
                     lotList.add(d.Lot8Name);
                     lotList.add(d.Lot9Name);
+
+                    lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, lotList);
+                    lotAdapter.setDropDownViewResource(R.layout.generic_list);
+                    spinnerLot.setAdapter(lotAdapter);
+
+                    if (lotSelection.equals(""))
+                        spinnerLot.setSelection(0);
+                    else
+                        spinnerLot.setSelection(lotList.indexOf(lotSelection), true);
+
+                    selectedLot = spinnerLot.getSelectedItem().toString();
                 }
 
                 dealershipList.add(d);
@@ -513,7 +527,11 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                         lotList.add(dealershipAdapter.getItem(arg2).Lot8Name);
                     if (!dealershipAdapter.getItem(arg2).Lot9Name.equals(""))
                         lotList.add(dealershipAdapter.getItem(arg2).Lot9Name);
+
+                    // reset the lot spinner
                     lotAdapter.notifyDataSetChanged();
+                    spinnerLot.setSelection(0);
+                    selectedLot = spinnerLot.getSelectedItem().toString();
                     GetPhysicalDB(false);
                 }
 
@@ -548,28 +566,32 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 startActivityForResult(i, 2);
                 break;
             case R.id.action_upload:
-                AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
-                builder.setTitle("Upload Physical Inventory");
-                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        new UploadTask().execute();
-                        dialog.dismiss();
-                    }
-                });
-                builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        //TODO
-                        dialog.dismiss();
-                    }
-                });
-                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
+                if (Utilities.isNetworkAvailable(getApplicationContext())) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
+                    builder.setTitle("Upload Physical Inventory?");
+                    builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            new UploadTask().execute();
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            //TODO
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                        @Override
+                        public void onDismiss(DialogInterface dialog) {
 
-                    }
-                });
-                AlertDialog dialog = builder.create();
-                dialog.show();
+                        }
+                    });
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Please check your internet connection.", Toast.LENGTH_LONG).show();
+                }
 
                 break;
         }
@@ -630,8 +652,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                             new Handler().postDelayed(new Runnable() {
 
                                 public void run() {
-
-
                                     listAdapter.notifyDataSetChanged();
 
                                 }
@@ -650,18 +670,10 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         //Register our receiver.
         this.registerReceiver(EMDKReceiver, intentFilter);
 
+        lotList.clear();
         GetDealershipsDB();
 
-        lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, lotList);
-        lotAdapter.setDropDownViewResource(R.layout.generic_list);
-        spinnerLot.setAdapter(lotAdapter);
 
-        if (lotSelection.equals(""))
-            spinnerLot.setSelection(0);
-        else
-            spinnerLot.setSelection(lotList.indexOf(lotSelection), true);
-
-        selectedLot = spinnerLot.getSelectedItem().toString();
         spinnerLot.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
@@ -733,7 +745,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     @Override
     public void onOpened(EMDKManager emdkManager) {
         this.emdkManager = emdkManager;
-
 
         mProfileManager = (ProfileManager) emdkManager.getInstance(EMDKManager.FEATURE_TYPE.PROFILE);
 
@@ -833,7 +844,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 String alert1 = "Inventory count: " + inventoryCount;
                 String alert2 = "Duplicate count: " + duplicateCount;
                 String alert3 = "Bad VIN count: " + badVinCount;
-                alertDialog.setMessage(alert1 +"\n"+ alert2 +"\n"+ alert3);
+                alertDialog.setMessage(alert1 + "\n" + alert2 + "\n" + alert3);
                 alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
                         new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -841,9 +852,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                             }
                         });
                 alertDialog.show();
-            }
-            else
-            {
+            } else {
                 mProgressDialog.dismiss();
             }
         }
@@ -853,7 +862,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             HttpURLConnection connection;
             OutputStreamWriter request;
             InputStreamReader isr;
-            JSONObject postData;
             JSONObject responseData;
             String result;
 
@@ -862,7 +870,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
 
                     String json = inventoryData;
-                    String address = Utilities.AppDevURL + Utilities.InventoryUploadURL;
+                    String address = Utilities.AppURL + Utilities.InventoryUploadURL;
                     url = new URL(address);
 
                     connection = (HttpURLConnection) url.openConnection();

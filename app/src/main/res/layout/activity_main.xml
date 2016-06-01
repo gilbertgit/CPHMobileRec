@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/buttonPhysical"
+        android:layout_width="120dp"
+        android:layout_height="36dp"
+        android:padding="5dp"
+        android:fontFamily="Lato Regular"
+        android:background="@color/colorHeader"
+        android:textColor="@android:color/white"
+        android:text="PHYSICAL"
+        android:textSize="20sp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="200dp"/>
+
+    <Button
+        android:id="@+id/buttonRescan"
+        android:layout_width="120dp"
+        android:layout_height="36dp"
+        android:padding="5dp"
+        android:fontFamily="Lato Regular"
+        android:background="@color/colorHeader"
+        android:textColor="@android:color/white"
+        android:text="RESCAN"
+        android:textSize="20sp"
+        android:layout_below="@+id/buttonPhysical"
+        android:layout_alignStart="@+id/buttonPhysical"
+        android:layout_marginTop="20dp"/>
+
+</RelativeLayout>

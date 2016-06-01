@@ -101,16 +101,17 @@ public class OrganizationActivity  extends Activity
             @Override
             public void onClick(View v) {
                 dbHelper.ImportData(getApplicationContext());
+                Toast.makeText(getApplicationContext(), "Data has been imported!", Toast.LENGTH_LONG).show();
             }
         });
 
-        if(Utilities.isNetworkAvailable(OrganizationActivity.this)) {
-            new loadOrganizations().execute();
-        }
-        else
-        {
-            GetOrganizationsDB();
-        }
+//        if(Utilities.isNetworkAvailable(OrganizationActivity.this)) {
+//            //new loadOrganizations().execute();
+//        }
+//        else
+//        {
+//            //GetOrganizationsDB();
+//        }
     }
 
     @Override

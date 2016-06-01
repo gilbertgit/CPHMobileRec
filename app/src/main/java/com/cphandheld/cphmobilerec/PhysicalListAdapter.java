@@ -21,11 +21,11 @@ public class PhysicalListAdapter  extends ArrayAdapter<Physical> {
     View.OnTouchListener mTouchListener;
 
 
-    public PhysicalListAdapter(Context context, int resource, ArrayList<Physical> bins, View.OnTouchListener listener) {
-        super(context, resource, bins);
+    public PhysicalListAdapter(Context context, int resource, ArrayList<Physical> phys, View.OnTouchListener listener) {
+        super(context, resource, phys);
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mContext = context;
-        mPhysicals = bins;
+        mPhysicals = phys;
         mTouchListener = listener;
     }
 

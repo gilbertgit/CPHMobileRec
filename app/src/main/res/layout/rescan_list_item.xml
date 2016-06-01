@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:layout_marginRight="25dp"
+                android:layout_marginLeft="25dp"
+                android:layout_marginTop="20dp"
+
+    >
+
+    <TextView
+        android:id="@+id/textVin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1HGEJ8224VL803367"
+        android:textAllCaps="true"
+        android:textStyle="bold"
+        />
+    <TextView
+        android:id="@+id/textDateTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:textStyle="normal"
+        android:text="4/8/2014 12:55:45"
+        />
+    <TextView
+        android:id="@+id/textYearMakeModel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textVin"
+        android:textStyle="normal"
+        android:text="2016 Nissan Juke"
+        android:layout_marginTop="5dp"
+        />
+    <TextView
+        android:id="@+id/textDealerCode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textDateTime"
+        android:layout_alignParentRight="true"
+        android:textStyle="normal"
+        android:text="L4736"
+        android:layout_marginTop="5dp"
+        />
+    <TextView
+        android:id="@+id/textEntryType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textYearMakeModel"
+        android:textStyle="normal"
+        android:text="Scanned"
+        android:layout_marginTop="5dp"
+        />
+    <TextView
+        android:id="@+id/textScannedBy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textDealerCode"
+        android:layout_alignParentRight="true"
+        android:textStyle="normal"
+        android:text="John Neireiter"
+        android:layout_marginTop="5dp"
+        />
+    </RelativeLayout>

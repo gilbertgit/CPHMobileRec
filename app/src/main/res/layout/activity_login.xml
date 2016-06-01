@@ -9,35 +9,35 @@
 
 
     <ImageView
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
         android:id="@+id/logo"
         android:src="@drawable/cph_logo"
         android:soundEffectsEnabled="false"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="15dp"/>
 
-    <TextView
-        android:id="@+id/textOrgName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/logo"
-        android:gravity="center"
-        android:layout_marginTop="10dp"
-        android:textSize="12sp"
-        android:textColor="@color/colorLoginOrgText"
-        android:fontFamily="Lato Regular"
-        android:text="@string/empty_org"/>
+    <!--<TextView-->
+        <!--android:id="@+id/textOrgName"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@id/logo"-->
+        <!--android:gravity="center"-->
+        <!--android:layout_marginTop="10dp"-->
+        <!--android:textSize="12sp"-->
+        <!--android:textColor="@color/colorLoginOrgText"-->
+        <!--android:fontFamily="Lato Regular"-->
+        <!--android:text="@string/empty_org"/>-->
 
     <TextView
         android:id="@+id/enterPin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/textOrgName"
+        android:layout_below="@id/logo"
         android:gravity="center"
         android:layout_marginTop="20dp"
         android:textSize="16sp"
-        android:textColor="@android:color/white"
+        android:textColor="@android:color/darker_gray"
         android:fontFamily="Lato Regular"
         android:text="@string/login_header"/>
 

@@ -127,6 +127,7 @@ public class ManualEntryActivity extends ActionBarActivity {
                 String formattedTime = tf.format(c.getTime());
                 DBVehicleEntry.insertVehicleEntry(dbHelper, editTextVin.getText().toString(),sentDealership, sentNewUsed, "Manual", sentLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
                 Intent i = new Intent(ManualEntryActivity.this, PhysicalActivity.class);
+                i.putExtra("back", true);
                 i.putExtra("dealership", sentDealershipIndex);
                 i.putExtra("newUsed", sentNewUsed);
                 i.putExtra("lot", sentLot);

@@ -36,6 +36,10 @@ public class EditEntryActivity extends ActionBarActivity {
     String sentVin;
     String sentEntryType;
     String sentNotes;
+
+    String newUsedIndex;
+    String lotIndex;
+    int sentDealershipIndex;
     int sentDealerPos;
 
     DBHelper dbHelper;
@@ -63,6 +67,9 @@ public class EditEntryActivity extends ActionBarActivity {
         sentEntryType = intent.getStringExtra("extraEntryType");
         sentNotes = intent.getStringExtra("extraNotes");
         sentDealerPos = intent.getIntExtra("extraDealerPos", 0);
+        lotIndex = intent.getStringExtra("extraLotIndex");
+        newUsedIndex = intent.getStringExtra("extraNewUsedIndex");
+        sentDealershipIndex = intent.getIntExtra("extraDealershipIndex", 0);
 
         actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>" + sentVin + "</font>"));
 
@@ -107,7 +114,9 @@ public class EditEntryActivity extends ActionBarActivity {
         });
 
         GetDealershipsDB();
-        spinnerDealership.setSelection(sentDealerPos);
+
+        int p = dealershipAdapter.getPosition(GetDealershipForSpinner());
+        spinnerDealership.setSelection(p);
 
         lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, lotList);
         lotAdapter.setDropDownViewResource(R.layout.generic_list);
@@ -152,9 +161,15 @@ public class EditEntryActivity extends ActionBarActivity {
                 String formattedDate = df.format(c.getTime());
                 String formattedTime = tf.format(c.getTime());
                 DBVehicleEntry.updateVehicleEntry(dbHelper, sentVin, sentDealership, sentNewUsed, sentEntryType, sentLot, formattedDate, formattedTime, editTextNotes.getText().toString(), String.valueOf(Utilities.currentUser.Id));
+
                 Intent i = new Intent(EditEntryActivity.this, PhysicalActivity.class);
+                setResult(RESULT_OK, i);
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(i);
+                i.putExtra("back", true);
+                i.putExtra("newUsed", newUsedIndex);
+                i.putExtra("lot", lotIndex);
+                i.putExtra("dealership", sentDealershipIndex);
+                finish();
                 break;
         }
 
@@ -163,8 +178,25 @@ public class EditEntryActivity extends ActionBarActivity {
     @Override
     public void onBackPressed() {
         Intent i = new Intent(EditEntryActivity.this, PhysicalActivity.class);
+        i.putExtra("back", true);
+        i.putExtra("newUsed", newUsedIndex);
+        i.putExtra("lot", lotIndex);
+        i.putExtra("dealership", sentDealershipIndex);
+        setResult(RESULT_OK, i);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(i);
+        finish();
+    }
+
+    private Dealership GetDealershipForSpinner()
+    {
+        Dealership d = new Dealership();
+        for(int i = 0; i < dealershipList.size(); i++)
+        {
+            d = (Dealership)dealershipList.get(i);
+            if (d.DealerCode.equals(sentDealership))
+                return d;
+        }
+        return d;
     }
 
     public void GetDealershipsDB() {
@@ -177,15 +209,24 @@ public class EditEntryActivity extends ActionBarActivity {
 
                 Dealership d = DBUsers.setDealershipData(c);
 
-                if (c.getPosition() == 0) {
+                if (d.DealerCode.equals(sentDealership)) {
+                    if(!d.Lot1Name.equals(""))
                     lotList.add(d.Lot1Name);
+                    if(!d.Lot2Name.equals(""))
                     lotList.add(d.Lot2Name);
+                    if(!d.Lot3Name.equals(""))
                     lotList.add(d.Lot3Name);
+                    if(!d.Lot4Name.equals(""))
                     lotList.add(d.Lot4Name);
+                    if(!d.Lot5Name.equals(""))
                     lotList.add(d.Lot5Name);
+                    if(!d.Lot6Name.equals(""))
                     lotList.add(d.Lot6Name);
+                    if(!d.Lot7Name.equals(""))
                     lotList.add(d.Lot7Name);
+                    if(!d.Lot8Name.equals(""))
                     lotList.add(d.Lot8Name);
+                    if(!d.Lot9Name.equals(""))
                     lotList.add(d.Lot9Name);
                 }
 
@@ -229,7 +270,11 @@ public class EditEntryActivity extends ActionBarActivity {
                         lotList.add(dealershipAdapter.getItem(arg2).Lot8Name);
                     if (!dealershipAdapter.getItem(arg2).Lot9Name.equals(""))
                         lotList.add(dealershipAdapter.getItem(arg2).Lot9Name);
+
+                    // reset lot spinner
                     lotAdapter.notifyDataSetChanged();
+                    spinnerLot.setSelection(0);
+                    sentLot = spinnerLot.getSelectedItem().toString();
                 }
 
                 @Override
@@ -238,7 +283,6 @@ public class EditEntryActivity extends ActionBarActivity {
 
                 }
             });
-            //spinnerDealership.setSelection(0);
         }
     }
 

@@ -31,19 +31,14 @@ public class DBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "CPHMobileDB.db";
 
     public static final String USER_TABLE_NAME = "users";
-    public static final String USER_COLUMN_ID = "id";
-    public static final String USER_COLUMN_USER_ID = "userId";
-    public static final String USER_COLUMN_PIN = "pin";
-    public static final String USER_COLUMN_ORGANIZATION_ID = "organizationId";
-    public static final String USER_COLUMN_NAME = "name";
 
     public static final String ORGANIZATION_TABLE_NAME = "organizations";
-    public static final String ORGANIZATION_COLUMN_ORGANIZATION_ID = "organizationId";
-    public static final String ORGANIZATION_COLUMN_NAME = "name";
 
     public static final String VEHICLE_ENTRY_TABLE_NAME = "vehicleentry";
+
     public static final String DEALERSHIPS_TABLE_NAME = "dealership";
 
+    public static final String RESCAN_TABLE_NAME = "rescan";
     protected SQLiteDatabase sqdb;
     DBHelper dbHelper;
 
@@ -61,6 +56,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("create table " + ORGANIZATION_TABLE_NAME + " ( id integer primary key autoincrement, organizationId text, name text)");
         db.execSQL("create table " + VEHICLE_ENTRY_TABLE_NAME + " ( id integer primary key autoincrement, vin text, dealership text, newused                text, entrytype text, lot text, date text, time text, notes text, userid text)");
         db.execSQL("create table " + DEALERSHIPS_TABLE_NAME + " (id integer primary key, userid text, dealercode text, name text, lot1name text, lot2name text, lot3name text, lot4name text, lot5name text, lot6name text, lot7name text, lot8name text, lot9name text)");
+        db.execSQL("create table " + RESCAN_TABLE_NAME + " (id integer primary key, siid text, dealerCode text, vin text, assigned text, year text, make text, model text, color text, entryMethod text, scannedDate text, userId text)");
     }
 
     @Override
@@ -69,6 +65,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + ORGANIZATION_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + VEHICLE_ENTRY_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + DEALERSHIPS_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + RESCAN_TABLE_NAME);
         onCreate(db);
     }
 
@@ -164,4 +161,39 @@ public class DBHelper extends SQLiteOpenHelper {
             Log.e("ExportData", sqlEx.getMessage(), sqlEx);
         }
     }
+
+    public boolean BackupRescanDB(Context context, String user) {
+
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
+        String formattedDate = df.format(c.getTime());
+
+        File dbFile =  context.getDatabasePath(DATABASE_NAME);
+        File exportDir = new File(Environment.getExternalStorageDirectory()+"/cphmobile/", "");
+        if (!exportDir.exists()) {
+            exportDir.mkdirs();
+        }
+
+        File file = new File(exportDir, "RESCAN" + formattedDate +".csv");
+        try {
+            file.createNewFile();
+            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+            dbHelper.getReadableDatabase();
+            Cursor curCSV = sqdb.rawQuery("SELECT * FROM " + RESCAN_TABLE_NAME + " WHERE userid = ?", new String[]{user});
+            csvWrite.writeNext(curCSV.getColumnNames());
+            while (curCSV.moveToNext()) {
+                //Which column you want to export
+                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
+                csvWrite.writeNext(arrStr);
+            }
+            csvWrite.close();
+            curCSV.close();
+            return true;
+        } catch (Exception sqlEx) {
+            Log.e("ExportData", sqlEx.getMessage(), sqlEx);
+        }
+
+        return false;
+    }
+
 }

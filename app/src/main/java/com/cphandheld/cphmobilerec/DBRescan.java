@@ -1,0 +1,197 @@
+package com.cphandheld.cphmobilerec;
+
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+
+import java.util.ArrayList;
+
+/**
+ * Created by titan on 5/31/16.
+ */
+public class DBRescan {
+
+    public static final String RESCAN_TABLE_NAME = "rescan";
+    public static final String RESCAN_COLUMN_SIID = "siid";
+    public static final String RESCAN_COLUMN_VIN = "vin";
+    public static final String RESCAN_COLUMN_ASSIGNED = "assigned";
+    public static final String RESCAN_COLUMN_YEAR = "year";
+    public static final String RESCAN_COLUMN_MAKE = "make";
+    public static final String RESCAN_COLUMN_MODEL = "model";
+    public static final String RESCAN_COLUMN_COLOR = "color";
+    public static final String RESCAN_COLUMN_ENTRY_METHOD = "entryMethod";
+    public static final String RESCAN_COLUMN_DEALERCODE = "dealerCode";
+    public static final String RESCAN_COLUMN_SCANNED_DATE = "scannedDate";
+    public static final String RESCAN_COLUMN_SCANNED_BY = "scannedBy";
+    public static final String RESCAN_COLUMN_USER_ID = "userId";
+
+    public static boolean insertRescan(DBHelper dbh, String siid, String dealerCode, String vin, String assigned, String year, String make, String model, String color, String entryMethod, String scannedDate, String userId) {
+        // siid, dealerCode, vin, assigned, year, make, model, color,entryMethod, scannedDate, userId
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(RESCAN_COLUMN_SIID, siid);
+        contentValues.put(RESCAN_COLUMN_DEALERCODE, dealerCode);
+        contentValues.put(RESCAN_COLUMN_VIN, vin);
+        contentValues.put(RESCAN_COLUMN_ASSIGNED, assigned);
+        contentValues.put(RESCAN_COLUMN_YEAR, year);
+        contentValues.put(RESCAN_COLUMN_MAKE, make);
+        contentValues.put(RESCAN_COLUMN_MODEL, model);
+        contentValues.put(RESCAN_COLUMN_COLOR, color);
+        contentValues.put(RESCAN_COLUMN_ENTRY_METHOD, entryMethod);
+        contentValues.put(RESCAN_COLUMN_SCANNED_DATE, scannedDate);
+        contentValues.put(RESCAN_COLUMN_USER_ID, userId);
+
+        db.insertWithOnConflict(RESCAN_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
+
+        return true;
+    }
+
+    public static boolean updateRescanByVin(DBHelper dbh, String vin, String entryMethod, String scannedDate, String scannedBy, String userId) {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(RESCAN_COLUMN_ENTRY_METHOD, entryMethod);
+        contentValues.put(RESCAN_COLUMN_SCANNED_DATE, scannedDate);
+        //contentValues.put(RESCAN_COLUMN_SCANNED_BY, scannedBy);
+        contentValues.put(RESCAN_COLUMN_USER_ID, userId);
+
+        db.update(RESCAN_TABLE_NAME, contentValues, "vin = ?", new String[]{vin});
+
+        return true;
+    }
+
+    public static Cursor getRescanToScan(DBHelper dbh, String dealership) {
+        SQLiteDatabase db = dbh.getReadableDatabase();
+
+        Cursor res = db.rawQuery("select * from " + RESCAN_TABLE_NAME + " where " + RESCAN_COLUMN_DEALERCODE + " = ? and " + RESCAN_COLUMN_SCANNED_DATE + " is null or " + RESCAN_COLUMN_SCANNED_DATE + " = '' order by make DESC", new String[]{dealership});
+        return res;
+    }
+
+    public static Cursor getCompletedRescans(DBHelper dbh, String dealership) {
+        SQLiteDatabase db = dbh.getReadableDatabase();
+
+        Cursor res = db.rawQuery("select * from " + RESCAN_TABLE_NAME + " where " + RESCAN_COLUMN_DEALERCODE + " = ? and " + RESCAN_COLUMN_SCANNED_DATE + " != '' order by scannedDate DESC", new String[]{dealership});
+        return res;
+    }
+
+    public static Cursor getCompletedRescansByUser(DBHelper dbh, String user) {
+        SQLiteDatabase db = dbh.getReadableDatabase();
+
+        Cursor res = db.rawQuery("select * from " + RESCAN_TABLE_NAME + " where " + RESCAN_COLUMN_USER_ID + " = ? and " + RESCAN_COLUMN_SCANNED_DATE + " != '' order by scannedDate DESC", new String[]{user});
+        return res;
+    }
+
+    public static boolean uploadReady(DBHelper dbh) {
+        Cursor c = null;
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        boolean result = false;
+        try {
+
+            String query = "select count(*) from " + RESCAN_TABLE_NAME + " where scannedDate != ''";
+            c = db.rawQuery(query, null);
+            if (c.moveToFirst()) {
+                if (c.getInt(0) != 0)
+                    result = true;
+            }
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+            if (db != null) {
+                db.close();
+            }
+
+            return result;
+        }
+    }
+
+    public static void deleteRescanByUser(DBHelper dbh, String user) {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        db.delete(RESCAN_TABLE_NAME,
+                RESCAN_COLUMN_USER_ID + " = ? ",
+                new String[]{user});
+    }
+
+    public static void deleteRescan(DBHelper dbh) {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        db.delete(RESCAN_TABLE_NAME,
+                RESCAN_COLUMN_VIN + " != ? ",
+                new String[]{""});
+    }
+
+    public static Rescan setRescanData(Cursor c) {
+        int siidIndex = c.getColumnIndex("siid");
+        String siid = c.getString(siidIndex);
+
+        int vinIndex = c.getColumnIndex("vin");
+        String vin = c.getString(vinIndex);
+
+        int assignedIndex = c.getColumnIndex("assigned");
+        String assigned = c.getString(assignedIndex);
+
+        int dealerCodeIndex = c.getColumnIndex("dealerCode");
+        String dealerCode = c.getString(dealerCodeIndex);
+
+        int entryMethodIndex = c.getColumnIndex("entryMethod");
+        String entryMethod = c.getString(entryMethodIndex);
+
+        int yearIndex = c.getColumnIndex("year");
+        String year = c.getString(yearIndex);
+
+        int makeIndex = c.getColumnIndex("make");
+        String make = c.getString(makeIndex);
+
+        int modelIndex = c.getColumnIndex("model");
+        String model = c.getString(modelIndex);
+
+        int colorIndex = c.getColumnIndex("color");
+        String color = c.getString(colorIndex);
+
+        int scannedDateIndex = c.getColumnIndex("scannedDate");
+        String scannedDate = c.getString(scannedDateIndex);
+
+        int userIdIndex = c.getColumnIndex("userId");
+        String userId = c.getString(userIdIndex);
+
+        return new Rescan(siid, dealerCode, vin, assigned, year, make, model, color, entryMethod, scannedDate, userId);
+
+    }
+
+    public static ArrayList getRescabForUpload(DBHelper dbh, String user) {
+        Cursor c = DBRescan.getCompletedRescansByUser(dbh, user);
+
+        ArrayList rescan = new ArrayList();
+
+        if (c.moveToFirst()) {
+            do {
+                int siidIndex = c.getColumnIndex("siid");
+                String siid = c.getString(siidIndex);
+
+                int vinIndex = c.getColumnIndex("vin");
+                String vin = c.getString(vinIndex);
+
+                int assignedIndex = c.getColumnIndex("assigned");
+                String assigned = c.getString(assignedIndex);
+
+                int dealerCodeIndex = c.getColumnIndex("dealerCode");
+                String dealerCode = c.getString(dealerCodeIndex);
+
+                int entryMethodIndex = c.getColumnIndex("entryMethod");
+                String entryMethod = c.getString(entryMethodIndex);
+
+                int scannedDateIndex = c.getColumnIndex("scannedDate");
+                String scannedDate = c.getString(scannedDateIndex);
+
+                int userIdIndex = c.getColumnIndex("userId");
+                String userId = c.getString(userIdIndex);
+
+                RescanComplete res = new RescanComplete(dealerCode, siid, entryMethod, vin, "0", "0", scannedDate);
+
+                rescan.add(res);
+            } while (c.moveToNext());
+        }
+        c.close();
+
+        return rescan;
+
+    }
+}

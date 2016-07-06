@@ -44,7 +44,7 @@ public class RescanListAdapter extends ArrayAdapter<Rescan> {
         ((TextView) convertView.findViewById(R.id.textEntryType)).setText((rescan.getEntryType()));
         ((TextView) convertView.findViewById(R.id.textDateTime)).setText((rescan.getScanneDate()));
         ((TextView) convertView.findViewById(R.id.textDealerCode)).setText((rescan.getDealership()));
-        ((TextView) convertView.findViewById(R.id.textScannedBy)).setText((rescan.getUserName()));
+        //((TextView) convertView.findViewById(R.id.textScannedBy)).setText((rescan.getScannedBy()));
 
         return convertView;
     }

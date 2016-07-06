@@ -4,9 +4,13 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
-    <TextView
+    <ListView
+        android:id="@+id/listDoneRescans"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="TEST2"/>
+        android:background="@android:color/white"
+        android:layout_marginTop="0dp"
+        android:divider="@color/colorDefaultBg"
+        android:dividerHeight="2dp"/>
 
 </LinearLayout>

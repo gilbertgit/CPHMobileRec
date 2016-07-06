@@ -290,25 +290,34 @@ public class LoginActivity extends ActionBarActivity {
             }
             else
             {
-//                if(pin.equals("222222"))
-//                {
-//                    Intent i = new Intent(LoginActivity.this, PhysicalActivity.class);
-//                    startActivity(i);
-//                }
+                new checkConnectionTask().execute(pin);
+            }
+        }
+    }
 
-                if (Utilities.isNetworkAvailable(LoginActivity.this)) {
-                    // Authenticate the user
-                    new LoginTask().execute(Integer.toString(organizationId), pin);
+    private class checkConnectionTask extends AsyncTask<String, Void, Boolean> {
+        String pin = "";
+        @Override
+        protected Boolean doInBackground(String... params) {
+            pin = params[0];
+            return Utilities.hasInternetAccess(LoginActivity.this);
+        }
+        @Override
+        protected void onPostExecute(Boolean result) {
+            if(result)
+            {
+                new LoginTask().execute(pin);
+            }
+            else
+            {
+                // Local Authentication
+                if (DBUsers.isUserStored(dbHelper, pin)) {
+                    getStoredUser(pin);
+                    Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                    startActivity(i);
                 } else {
-                    // Local Authentication
-                    if (DBUsers.isUserStored(dbHelper, pin)) {
-                        getStoredUser(pin);
-                        Intent i = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(i);
-                    } else {
-                        YoyoPin();
-                        Toast.makeText(getApplicationContext(), "User not stored.", Toast.LENGTH_LONG).show();
-                    }
+                    YoyoPin();
+                    Toast.makeText(getApplicationContext(), "User not stored.", Toast.LENGTH_LONG).show();
                 }
             }
         }
@@ -452,7 +461,7 @@ public class LoginActivity extends ActionBarActivity {
         protected Boolean doInBackground(String... params) {
             Utilities.currentUser = null;
 
-            return LoginPost(Integer.parseInt(params[0]), params[1]);
+            return LoginPost(params[0]);
         }
 
         @Override
@@ -481,16 +490,13 @@ public class LoginActivity extends ActionBarActivity {
             mProgressDialog.dismiss();
         }
 
-        private boolean LoginPost(int organizationId, String pin) {
+        private boolean LoginPost(String pin) {
 
             URL url;
             HttpURLConnection connection;
-            OutputStreamWriter request;
             JSONObject responseData;
-            JSONObject postData;
             InputStreamReader isr;
             String result;
-            Gson gson = new Gson();
 
             try {
                 String address = Utilities.AppURL + Utilities.LoginURL + pin;
@@ -519,7 +525,7 @@ public class LoginActivity extends ActionBarActivity {
                     result = Utilities.StreamToString(isr);
                     responseData = new JSONObject(result);
                     errorMessage = responseData.getString("Message");
-                    Log.i("vehicle check in error", errorMessage);
+                    Log.i("LOGIN ERROR: ", errorMessage);
                     return false;
                 }
             } catch (JSONException | IOException e) {

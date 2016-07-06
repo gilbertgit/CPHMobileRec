@@ -63,7 +63,7 @@
         android:layout_below="@+id/textDealerCode"
         android:layout_alignParentRight="true"
         android:textStyle="normal"
-        android:text="John Neireiter"
+        android:text=""
         android:layout_marginTop="5dp"
         />
     </RelativeLayout>

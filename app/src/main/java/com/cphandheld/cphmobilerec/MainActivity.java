@@ -1,8 +1,10 @@
 package com.cphandheld.cphmobilerec;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.View;
 import android.widget.Button;
 
@@ -17,6 +19,10 @@ public class MainActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ActionBar actionBar = getActionBar();
+        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>CPH Reconciliation</font>"));
+        actionBar.show();
 
         buttonPhysical = (Button)findViewById(R.id.buttonPhysical);
         buttonRescan = (Button)findViewById(R.id.buttonRescan);

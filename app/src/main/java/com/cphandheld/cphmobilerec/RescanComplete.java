@@ -25,4 +25,9 @@ public class RescanComplete {
         TimeStamp = ts;
     }
 
+    public String getSIID()
+    {
+        return StepInstanceGuid;
+    }
+
 }

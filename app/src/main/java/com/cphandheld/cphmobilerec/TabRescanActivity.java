@@ -11,6 +11,8 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.TextView;
+
 import java.util.ArrayList;
 
 /**
@@ -41,12 +43,23 @@ public class TabRescanActivity extends Activity {
 
     }
 
+    private void SetRescanCount()
+    {
+        int rescanCount = DBRescan.getRescanCountByDealerCode(dbHelper, Utilities.currentDealership);
+        RescanActivity activity = (RescanActivity) this.getParent();
+        TextView test = (TextView)activity.findViewById(R.id.textRescanCount);
+        test.setText("Count(" + rescanCount + ")");
+    }
+
     @Override
     public void onResume()
     {
         AddRescansToListView();
+        SetRescanCount();
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(getString(R.string.intent_data_refresh));
+        filter.addAction(getString(R.string.intent_dealership_change));
         updaterBroadcastReceiver = new UpdaterBroadcastReceiver();
         registerReceiver(updaterBroadcastReceiver,filter);
         super.onResume();
@@ -63,12 +76,18 @@ public class TabRescanActivity extends Activity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.v(TAG, "UpdaterBroadcastReceiver");
-            vinReceived = intent.getStringExtra("vin");
-            if(!vinReceived.equals("")) {
-                if (RemoveRescan(vinReceived)) {
-                    listAdapter.notifyDataSetChanged();
+            String action = intent.getAction();
+            if(action.equals(getString(R.string.intent_data_refresh))) {
+                vinReceived = intent.getStringExtra("vin");
+                if (!vinReceived.equals("")) {
+                    if (RemoveRescan(vinReceived)) {
+                        listAdapter.notifyDataSetChanged();
+                    }
+                } else {
+                    AddRescansToListView();
                 }
-            }else
+            }
+            else if (action.equals(getString(R.string.intent_dealership_change)))
             {
                 AddRescansToListView();
             }
@@ -94,20 +113,15 @@ public class TabRescanActivity extends Activity {
         if(dataUpdated) {
             rescans.removeAll(rescansToRemove);
             DBRescan.updateRescanByVin(dbHelper, vin, "Scanned", Utilities.GetDateTimeString(), scannedBy, String.valueOf(Utilities.currentUser.Id));
+            SetRescanCount();
         }
         return dataUpdated;
-    }
-
-    private void InsetTempData()
-    {
-        DBRescan.deleteRescan(dbHelper);
-        rescans.clear();
     }
 
     private void AddRescansToListView()
     {
         rescans.clear();
-        Cursor c = DBRescan.getRescanToScan(dbHelper, "0000A");
+        Cursor c = DBRescan.getRescanToScan(dbHelper, Utilities.currentDealership);
 
         if (c.moveToFirst()) {
             do {
@@ -120,6 +134,8 @@ public class TabRescanActivity extends Activity {
         c.close();
 
         listAdapter.notifyDataSetChanged();
+
+        SetRescanCount();
     }
 
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {

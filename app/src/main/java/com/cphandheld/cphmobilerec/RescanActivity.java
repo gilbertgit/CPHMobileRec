@@ -22,6 +22,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TabHost;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,6 +44,7 @@ import com.symbol.emdk.ProfileManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 /**
  * Created by titan on 5/21/16.
@@ -65,9 +68,9 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
     final HashMap<String, String> spinnerDealershipMap = new HashMap<String, String>();
 
     Spinner spinnerDealership;
+    private TextView textRescanCount;
     DBHelper dbHelper;
-    private FragmentTabHost mTabHost;
-
+    TabHost tabHost;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -89,9 +92,10 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         mProgressDialog.setMessage("Hold on a sec...");
 
         spinnerDealership = (Spinner)findViewById(R.id.spinnerDealership);
+        textRescanCount = (TextView)findViewById(R.id.textRescanCount);
 
         // create the TabHost that will contain the Tabs
-        TabHost tabHost = (TabHost)findViewById(android.R.id.tabhost);
+        tabHost = (TabHost)findViewById(android.R.id.tabhost);
 
 
         TabHost.TabSpec tab1 = tabHost.newTabSpec("First Tab");
@@ -105,13 +109,17 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         tab2.setIndicator("Completed");
         tab2.setContent(new Intent(this,TabRescanDoneActivity.class));
 
-
         /** Add the tabs  to the TabHost to display. */
         tabHost.addTab(tab1);
         tabHost.addTab(tab2);
 
         EMDKResults results = EMDKManager.getEMDKManager(getApplicationContext(), this);
 
+    }
+
+    public TextView getTextRescanCount()
+    {
+        return textRescanCount;
     }
 
     @Override
@@ -146,6 +154,9 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         };
         this.registerReceiver(EMDKRescanReceiver, intentFilter);
         GetDealershipsDB();
+
+        //int rescanCompleteCount = DBRescan.getRescanCompletedCountByDealerCode(dbHelper, Utilities.currentDealership);
+
     }
 
     @Override
@@ -222,7 +233,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         protected void onPostExecute(Boolean result) {
             if(result)
             {
-                new GetRescanTask().execute(Utilities.currentDealership);
+                new GetRescanTask().execute();
             }
             else
             {
@@ -309,7 +320,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
     }
 
     private class SubmitRescanTask extends AsyncTask<String, Void, Boolean> {
-
+        ArrayList rescan;
         @Override
         protected void onPreExecute() {
 
@@ -320,7 +331,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
             rescanData = "";
             Gson gson = new Gson();
-            ArrayList rescan = DBRescan.getRescabForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
+            rescan = DBRescan.getRescabForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
 
             if (!rescan.equals(null) && rescan.size() != 0) {
                 rescanData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"ScannerSerialNumber\":\"" + Utilities.androidId + "\",\"Rescans\":[";
@@ -345,14 +356,21 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
             if(result)
             {
-                if(dbHelper.BackupRescanDB(getApplicationContext(), String.valueOf(Utilities.currentUser.Id)))
+                if(dbHelper.BackupRescanDB(dbHelper, getApplicationContext(), String.valueOf(Utilities.currentUser.Id)))
                 {
-                    DBVehicleEntry.clearPhysicalTableByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+                    // Remove the rescan that we uploaded
+                    for (int i = 0; i < rescan.size(); i++) {
+                        DBRescan.deleteRescan(dbHelper, ((RescanComplete) rescan.get(i)).getSIID());
+                    }
+                    Toast.makeText(getApplicationContext(), "Successfully upload " + rescan.size() + " rescans!", Toast.LENGTH_LONG);
                     NotifyTabsRescanSync();
-//                    listAdapter.notifyDataSetChanged();
-//                    textCount.setText("Count(" + phys.size() + ")");
-
-
+                }
+            }
+            else
+            {
+                if(!errorMessage.equals(""))
+                {
+                    Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG);
                 }
             }
             mProgressDialog.dismiss();
@@ -369,7 +387,6 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
             try {
                 if (!rescanData.equals(null) && rescanData != "") {
-
 
                     String json = rescanData;
                     String address = Utilities.AppURL + Utilities.RescanUploadURL;
@@ -394,8 +411,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
                         isr = new InputStreamReader(connection.getInputStream());
                         result = Utilities.StreamToString(isr);
-                        responseData = new JSONObject(result);
-
+                        errorMessage = "";
                         return true;
                     } else {
                         isr = new InputStreamReader(connection.getErrorStream());
@@ -419,8 +435,23 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
     private class GetRescanTask extends AsyncTask<String, Void, Boolean> {
 
+        String dealercodes = "";
+
         @Override
         protected void onPreExecute() {
+            List<Dealership> dealerships = dealershipList;
+            int i = 0;
+            if(dealerships != null) {
+                int length = dealerships.size();
+                for (Dealership d : dealerships) {
+                    i++;
+                    if (i != length)
+                        dealercodes += d.DealerCode + ",";
+                    else
+                        dealercodes += d.DealerCode;
+
+                }
+            }
             mProgressDialog.setTitle("Fetching Rescan...");
             mProgressDialog.setMessage("Hold on a sec...");
             mProgressDialog.show();
@@ -430,7 +461,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         protected Boolean doInBackground(String... params) {
             //Utilities.currentUser = null;
 
-            return GetRescans(params[0]);
+            return GetRescans();
         }
 
         @Override
@@ -454,7 +485,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
             mProgressDialog.dismiss();
         }
 
-        private boolean GetRescans(String dealercodes) {
+        private boolean GetRescans() {
 
             URL url;
             HttpURLConnection connection;
@@ -467,8 +498,10 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
             String errorMessage;
 
             try {
+                dealercodes = URLEncoder.encode(dealercodes, "utf-8");
                 String address = Utilities.AppURL + Utilities.RescanDownloadURL + Utilities.androidId + "/" + dealercodes;
                 url = new URL(address);
+
                 connection = (HttpURLConnection) url.openConnection();
                 isr = new InputStreamReader(connection.getInputStream());
 

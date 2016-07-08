@@ -56,7 +56,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("create table " + ORGANIZATION_TABLE_NAME + " ( id integer primary key autoincrement, organizationId text, name text)");
         db.execSQL("create table " + VEHICLE_ENTRY_TABLE_NAME + " ( id integer primary key autoincrement, vin text, dealership text, newused                text, entrytype text, lot text, date text, time text, notes text, userid text)");
         db.execSQL("create table " + DEALERSHIPS_TABLE_NAME + " (id integer primary key, userid text, dealercode text, name text, lot1name text, lot2name text, lot3name text, lot4name text, lot5name text, lot6name text, lot7name text, lot8name text, lot9name text)");
-        db.execSQL("create table " + RESCAN_TABLE_NAME + " (id integer primary key, siid text, dealerCode text, vin text, assigned text, year text, make text, model text, color text, entryMethod text, scannedDate text, userId text)");
+        db.execSQL("create table " + RESCAN_TABLE_NAME + " (id integer primary key, siid text unique, dealerCode text, vin text, assigned text, year text, make text, model text, color text, entryMethod text, scannedDate text, userId text)");
     }
 
     @Override
@@ -162,7 +162,7 @@ public class DBHelper extends SQLiteOpenHelper {
         }
     }
 
-    public boolean BackupRescanDB(Context context, String user) {
+    public boolean BackupRescanDB(DBHelper dbh, Context context, String user) {
 
         Calendar c = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
@@ -178,8 +178,8 @@ public class DBHelper extends SQLiteOpenHelper {
         try {
             file.createNewFile();
             CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
-            dbHelper.getReadableDatabase();
-            Cursor curCSV = sqdb.rawQuery("SELECT * FROM " + RESCAN_TABLE_NAME + " WHERE userid = ?", new String[]{user});
+            SQLiteDatabase db = dbh.getReadableDatabase();
+            Cursor curCSV = db.rawQuery("SELECT * FROM " + RESCAN_TABLE_NAME + " WHERE userid = ?", new String[]{user});
             csvWrite.writeNext(curCSV.getColumnNames());
             while (curCSV.moveToNext()) {
                 //Which column you want to export

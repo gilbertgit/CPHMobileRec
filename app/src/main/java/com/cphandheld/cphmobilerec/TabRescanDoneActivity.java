@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -43,10 +44,19 @@ public class TabRescanDoneActivity extends Activity {
         doneRescanListView.setAdapter(listAdapter);
     }
 
+    private void SetRescanCount()
+    {
+        int rescanCompleteCount = DBRescan.getRescanCompletedCountByDealerCode(dbHelper, Utilities.currentDealership);
+        RescanActivity activity = (RescanActivity) this.getParent();
+        TextView test = (TextView)activity.findViewById(R.id.textRescanCount);
+        test.setText("Count(" + rescanCompleteCount + ")");
+    }
+
     @Override
     public void onResume() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(getString(R.string.intent_rescan_sync));
+        filter.addAction(getString(R.string.intent_dealership_change));
         updaterBroadcastReceiver = new UpdaterBroadcastReceiver();
         registerReceiver(updaterBroadcastReceiver, filter);
         super.onResume();
@@ -67,13 +77,18 @@ public class TabRescanDoneActivity extends Activity {
             if (action.equals(getString(R.string.intent_rescan_sync))) {
                 completedRescans.clear();
                 listAdapter.notifyDataSetChanged();
+                SetRescanCount();
+            }
+            else if (action.equals(getString(R.string.intent_dealership_change)))
+            {
+                AddRescansToListView();
             }
         }
     }
 
     private void AddRescansToListView() {
         completedRescans.clear();
-        Cursor c = DBRescan.getCompletedRescans(dbHelper, "0000A");
+        Cursor c = DBRescan.getCompletedRescans(dbHelper, Utilities.currentDealership);
 
         if (c.moveToFirst()) {
             do {
@@ -86,6 +101,8 @@ public class TabRescanDoneActivity extends Activity {
         c.close();
 
         listAdapter.notifyDataSetChanged();
+
+        SetRescanCount();
     }
 
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {

@@ -41,7 +41,7 @@ public class DBRescan {
         contentValues.put(RESCAN_COLUMN_SCANNED_DATE, scannedDate);
         contentValues.put(RESCAN_COLUMN_USER_ID, userId);
 
-        db.insertWithOnConflict(RESCAN_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
+        db.insertWithOnConflict(RESCAN_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_IGNORE);
 
         return true;
     }
@@ -80,6 +80,26 @@ public class DBRescan {
         return res;
     }
 
+    public static int getRescanCompletedCountByDealerCode(DBHelper dbh, String dealerCode)
+    {
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        Cursor c = db.rawQuery("select id from " + RESCAN_TABLE_NAME + " where " + RESCAN_COLUMN_SCANNED_DATE + " != '' and " + RESCAN_COLUMN_DEALERCODE + " = ?", new String[]{dealerCode});
+        c.moveToFirst();
+        int count = c.getCount();
+        c.close();
+        return count;
+    }
+
+    public static int getRescanCountByDealerCode(DBHelper dbh, String dealerCode)
+    {
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        Cursor c = db.rawQuery("select id from " + RESCAN_TABLE_NAME + " where " + RESCAN_COLUMN_SCANNED_DATE + " is null or " + RESCAN_COLUMN_SCANNED_DATE + " = '' and " + RESCAN_COLUMN_DEALERCODE + " = ?", new String[]{dealerCode});
+        c.moveToFirst();
+        int count = c.getCount();
+        c.close();
+        return count;
+    }
+
     public static boolean uploadReady(DBHelper dbh) {
         Cursor c = null;
         SQLiteDatabase db = dbh.getReadableDatabase();
@@ -111,11 +131,11 @@ public class DBRescan {
                 new String[]{user});
     }
 
-    public static void deleteRescan(DBHelper dbh) {
+    public static void deleteRescan(DBHelper dbh, String siid) {
         SQLiteDatabase db = dbh.getWritableDatabase();
         db.delete(RESCAN_TABLE_NAME,
-                RESCAN_COLUMN_VIN + " != ? ",
-                new String[]{""});
+                RESCAN_COLUMN_SIID + " != ? ",
+                new String[]{siid});
     }
 
     public static Rescan setRescanData(Cursor c) {

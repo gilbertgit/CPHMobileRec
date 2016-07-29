@@ -93,7 +93,7 @@ public class DBRescan {
     public static int getRescanCountByDealerCode(DBHelper dbh, String dealerCode)
     {
         SQLiteDatabase db = dbh.getReadableDatabase();
-        Cursor c = db.rawQuery("select id from " + RESCAN_TABLE_NAME + " where " + RESCAN_COLUMN_SCANNED_DATE + " is null or " + RESCAN_COLUMN_SCANNED_DATE + " = '' and " + RESCAN_COLUMN_DEALERCODE + " = ?", new String[]{dealerCode});
+        Cursor c = db.rawQuery("select id from " + RESCAN_TABLE_NAME + " where (" + RESCAN_COLUMN_SCANNED_DATE + " is null or " + RESCAN_COLUMN_SCANNED_DATE + " = '') and " + RESCAN_COLUMN_DEALERCODE + " = ?", new String[]{dealerCode});
         c.moveToFirst();
         int count = c.getCount();
         c.close();
@@ -134,7 +134,7 @@ public class DBRescan {
     public static void deleteRescan(DBHelper dbh, String siid) {
         SQLiteDatabase db = dbh.getWritableDatabase();
         db.delete(RESCAN_TABLE_NAME,
-                RESCAN_COLUMN_SIID + " != ? ",
+                RESCAN_COLUMN_SIID + " = ? ",
                 new String[]{siid});
     }
 

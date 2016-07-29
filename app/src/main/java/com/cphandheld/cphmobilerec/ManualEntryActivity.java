@@ -40,6 +40,7 @@ public class ManualEntryActivity extends ActionBarActivity {
     int sentDealershipIndex;
     String sentLot;
     String sentNewUsed;
+    String appType;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,11 +52,13 @@ public class ManualEntryActivity extends ActionBarActivity {
         actionBar.show();
 
         Intent intent = getIntent();
+        appType = intent.getStringExtra("extraAppType");
         sentDealership = intent.getStringExtra("extraDealership");
         sentDealershipIndex = intent.getIntExtra("extraDealershipIndex", 0);
-        sentLot = intent.getStringExtra("extraLot");
-        sentNewUsed = intent.getStringExtra("extraNewUsed");
-
+        if(appType.equals("RESCAN")) {
+            sentLot = intent.getStringExtra("extraLot");
+            sentNewUsed = intent.getStringExtra("extraNewUsed");
+        }
         dbHelper = new DBHelper(ManualEntryActivity.this);
         dbHelper.getWritableDatabase();
 
@@ -120,25 +123,47 @@ public class ManualEntryActivity extends ActionBarActivity {
         int id = item.getItemId();
         switch (id) {
             case R.id.action_done:
-                Calendar c = Calendar.getInstance();
-                SimpleDateFormat df = new SimpleDateFormat("MM/dd/yy");
-                SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
-                String formattedDate = df.format(c.getTime());
-                String formattedTime = tf.format(c.getTime());
-                DBVehicleEntry.insertVehicleEntry(dbHelper, editTextVin.getText().toString(),sentDealership, sentNewUsed, "Manual", sentLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
-                Intent i = new Intent(ManualEntryActivity.this, PhysicalActivity.class);
-                i.putExtra("back", true);
-                i.putExtra("dealership", sentDealershipIndex);
-                i.putExtra("newUsed", sentNewUsed);
-                i.putExtra("lot", sentLot);
-                setResult(RESULT_OK, i);
-                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                finish();
-                //startActivity(i);
+
+                if(appType.equals("RESCAN"))
+                    InsertRescan();
+                else
+                    InsertPhysical();
                 break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void InsertPhysical()
+    {
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("MM/dd/yy");
+        SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
+        String formattedDate = df.format(c.getTime());
+        String formattedTime = tf.format(c.getTime());
+        DBVehicleEntry.insertVehicleEntry(dbHelper, editTextVin.getText().toString(),sentDealership, sentNewUsed, "Manual", sentLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
+        Intent i = new Intent(ManualEntryActivity.this, PhysicalActivity.class);
+        i.putExtra("back", true);
+        i.putExtra("dealership", sentDealershipIndex);
+        i.putExtra("newUsed", sentNewUsed);
+        i.putExtra("lot", sentLot);
+        setResult(RESULT_OK, i);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        finish();
+    }
+
+    private void InsertRescan()
+    {
+        String firstName = Utilities.currentUser.FirstName;
+        String lastName = Utilities.currentUser.LastName;
+        String scannedBy =  firstName + " " + lastName;
+        DBRescan.updateRescanByVin(dbHelper, editTextVin.getText().toString(), "Manual", Utilities.GetDateTimeString(), scannedBy, String.valueOf(Utilities.currentUser.Id));
+
+        Intent i = new Intent(ManualEntryActivity.this, RescanActivity.class);
+        i.putExtra("back", true);
+        setResult(RESULT_OK, i);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        finish();
     }
 
     private void EnableDoneAction(boolean enable)

@@ -80,7 +80,8 @@ public class TabRescanActivity extends Activity {
             if(action.equals(getString(R.string.intent_data_refresh))) {
                 vinReceived = intent.getStringExtra("vin");
                 if (!vinReceived.equals("")) {
-                    if (RemoveRescan(vinReceived)) {
+                    String method = intent.getStringExtra("method");
+                    if (RemoveRescan(vinReceived, method)) {
                         listAdapter.notifyDataSetChanged();
                     }
                 } else {
@@ -94,7 +95,7 @@ public class TabRescanActivity extends Activity {
         }
     }
 
-    private boolean RemoveRescan(String vin)
+    private boolean RemoveRescan(String vin, String method)
     {
         boolean dataUpdated = false;
         String firstName = Utilities.currentUser.FirstName;
@@ -112,7 +113,7 @@ public class TabRescanActivity extends Activity {
 
         if(dataUpdated) {
             rescans.removeAll(rescansToRemove);
-            DBRescan.updateRescanByVin(dbHelper, vin, "Scanned", Utilities.GetDateTimeString(), scannedBy, String.valueOf(Utilities.currentUser.Id));
+            DBRescan.updateRescanByVin(dbHelper, vin, method, Utilities.GetDateTimeString(), scannedBy, String.valueOf(Utilities.currentUser.Id));
             SetRescanCount();
         }
         return dataUpdated;

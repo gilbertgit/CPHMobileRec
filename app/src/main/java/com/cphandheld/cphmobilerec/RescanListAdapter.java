@@ -37,7 +37,7 @@ public class RescanListAdapter extends ArrayAdapter<Rescan> {
         convertView.setClickable(true);
 
         Rescan rescan = mRescans.get(position);
-        String year = rescan.getYear().equals("0") ? "" : rescan.getYear();
+        String year = rescan.getYear() == null ? "" : rescan.getYear();
         String make = rescan.getMake() == null ? "" : rescan.getMake();
         String model = rescan.getModel() == null ? "" : rescan.getModel();
         String color = rescan.getColor() == null ? "" : rescan.getColor();

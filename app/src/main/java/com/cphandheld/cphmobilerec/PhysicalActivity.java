@@ -559,6 +559,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         switch (id) {
             case R.id.action_manual:
                 Intent i = new Intent(PhysicalActivity.this, ManualEntryActivity.class);
+                i.putExtra("extraAppType", "PHYSICAL");
                 i.putExtra("extraDealership", selectedDealership);
                 i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
                 i.putExtra("extraLot", selectedLot);

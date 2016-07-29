@@ -180,6 +180,11 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         int id = item.getItemId();
         switch (id) {
             case R.id.action_manual:
+                Intent i = new Intent(RescanActivity.this, ManualEntryActivity.class);
+                i.putExtra("extraAppType", "RESCAN");
+                i.putExtra("extraDealership", selectedDealership);
+                i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
+                startActivityForResult(i, 2);
                 break;
 
             case R.id.action_sync_rescan:
@@ -247,6 +252,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         Intent i = new Intent();
         i.setAction(action);
         i.putExtra("vin", vin);
+        i.putExtra("method", "Scanned");
         sendBroadcast(i);
     }
 
@@ -362,7 +368,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
                     for (int i = 0; i < rescan.size(); i++) {
                         DBRescan.deleteRescan(dbHelper, ((RescanComplete) rescan.get(i)).getSIID());
                     }
-                    Toast.makeText(getApplicationContext(), "Successfully upload " + rescan.size() + " rescans!", Toast.LENGTH_LONG);
+                    Toast.makeText(getApplicationContext(), "Successfully upload " + rescan.size() + " rescans!", Toast.LENGTH_LONG).show();
                     NotifyTabsRescanSync();
                 }
             }
@@ -411,7 +417,6 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
                         isr = new InputStreamReader(connection.getInputStream());
                         result = Utilities.StreamToString(isr);
-                        errorMessage = "";
                         return true;
                     } else {
                         isr = new InputStreamReader(connection.getErrorStream());
@@ -472,13 +477,12 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
                 }.getType());
 
                 for (Rescan r : array) {
-                    String scannedDate = r.getScanneDate();
                     // insert rescan
                     // siid, dealerCode, vin, assigned, year, make, model, color,entryMethod, scannedDate, userId
                     DBRescan.insertRescan(dbHelper, r.getSIID(), r.getDealership(), r.getVIN(), r.getAssigned(), r.getYear(), r.getMake(),                           r.getModel(), r.getColor(), r.getEntryType(), r.getScanneDate(), r.getUserId());
                 }
 
-                NotifyTabsOfUpdate("", "com.cphandheld.CPHMobileRec.TAB_DATA_REFRESH");
+                NotifyTabsOfUpdate("", getString(R.string.intent_data_refresh));
                 Toast.makeText(getApplicationContext(), "Rescan fetched.", Toast.LENGTH_SHORT).show();
             }
 
@@ -489,12 +493,9 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
             URL url;
             HttpURLConnection connection;
-            OutputStreamWriter request;
             JSONObject responseData;
-            JSONObject postData;
             InputStreamReader isr;
             String result;
-            Gson gson = new Gson();
             String errorMessage;
 
             try {
@@ -503,12 +504,11 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
                 url = new URL(address);
 
                 connection = (HttpURLConnection) url.openConnection();
-                isr = new InputStreamReader(connection.getInputStream());
-
-                if (connection.getResponseCode() == 200) {
+                connection.setRequestMethod("GET");
+                int responseCode = connection.getResponseCode();
+                if (responseCode == 200) {
                     isr = new InputStreamReader(connection.getInputStream());
                     result = Utilities.StreamToString(isr);
-                    //responseData = new JSONObject(result);
 
                     rescanResults = new JSONArray(result);
                     return true;

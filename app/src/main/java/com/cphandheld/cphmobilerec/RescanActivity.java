@@ -8,8 +8,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
 import android.util.Log;
@@ -71,6 +73,13 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
     private TextView textRescanCount;
     DBHelper dbHelper;
     TabHost tabHost;
+    private EMDKManager emdkManager = null;
+
+    private GPSHelper gpsHelper;
+    Intent gpsServiceIntent;
+    private Location lastKnownLoc;
+    private String latitude;
+    private String longitude;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -115,6 +124,21 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
         EMDKResults results = EMDKManager.getEMDKManager(getApplicationContext(), this);
 
+        // Create instance of service so we have context
+        gpsHelper = new GPSHelper(RescanActivity.this);
+
+        // check if GPS enabled
+        if (!gpsHelper.canGetLocation()) {
+            // can't get location
+            // GPS or Network is not enabled
+            // Ask user to enable GPS/network in settings
+            gpsHelper.showSettingsAlert();
+        }
+
+        gpsServiceIntent = new Intent(this, GPSHelper.class);
+        startService(gpsServiceIntent);
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mGPSReceiver, new IntentFilter(getString(R.string.intent_gps_receiver)));
     }
 
     public TextView getTextRescanCount()
@@ -142,9 +166,9 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
                     //Check that we have received data
                     if (data != null && data.length() > 0) {
-                        String barcode = Utilities.CheckVinSpecialCases(data);
+                        String vin = Utilities.CheckVinSpecialCases(data);
 
-                        NotifyTabsOfUpdate(barcode, getString(R.string.intent_data_refresh));
+                        NotifyTabsOfUpdate(vin, getString(R.string.intent_data_refresh));
                     }
 
                 }
@@ -158,6 +182,21 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         //int rescanCompleteCount = DBRescan.getRescanCompletedCountByDealerCode(dbHelper, Utilities.currentDealership);
 
     }
+
+    private BroadcastReceiver mGPSReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("Status");
+            Bundle b = intent.getBundleExtra("Location");
+            lastKnownLoc = (Location) b.getParcelable("Location");
+            if (lastKnownLoc != null) {
+                latitude = String.valueOf(lastKnownLoc.getLatitude());
+                longitude = String.valueOf(lastKnownLoc.getLongitude());
+
+            }
+        }
+    };
 
     @Override
     protected void onPause() {
@@ -252,6 +291,8 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         Intent i = new Intent();
         i.setAction(action);
         i.putExtra("vin", vin);
+        i.putExtra("latitude", latitude);
+        i.putExtra("longitude", longitude);
         i.putExtra("method", "Scanned");
         sendBroadcast(i);
     }
@@ -337,7 +378,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
             rescanData = "";
             Gson gson = new Gson();
-            rescan = DBRescan.getRescabForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
+            rescan = DBRescan.getRescanForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
 
             if (!rescan.equals(null) && rescan.size() != 0) {
                 rescanData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"ScannerSerialNumber\":\"" + Utilities.androidId + "\",\"Rescans\":[";
@@ -473,6 +514,10 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         protected void onPostExecute(Boolean result) {
 
             if(result) {
+                // Clear the rescans for this user
+                DBRescan.deleteRescanByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+
+                // Create array from rescan json result
                 ArrayList<Rescan> array = new Gson().fromJson(rescanResults.toString(), new TypeToken<List<Rescan>>() {
                 }.getType());
 
@@ -532,6 +577,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
     @Override
     public void onOpened(EMDKManager emdkManager) {
+        this.emdkManager = emdkManager;
         mProfileManager = (ProfileManager) emdkManager.getInstance(EMDKManager.FEATURE_TYPE.PROFILE);
 
         if (mProfileManager != null) {
@@ -555,5 +601,20 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
     @Override
     public void onClosed() {
 
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        Log.v(TAG, "onDestroy");
+
+        gpsHelper.stopUsingGPS();
+
+        stopService(gpsServiceIntent);
+
+//        if(emdkManager != null)
+//            emdkManager.release();
+
+        super.onDestroy();
     }
 }

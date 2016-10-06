@@ -15,9 +15,11 @@ public class Physical {
     private String Notes;
     private String TimeStamp;
     private String UserId;
+    private String Latitude;
+    private String Longitude;
 
 
-    public Physical( String vin, String dealership, String entryType, String newUsed, String date, String time, String lot, String notes, String userId) {
+    public Physical( String vin, String dealership, String entryType, String newUsed, String date, String time, String lot, String notes, String userId, String latitude, String longitude) {
         VIN = vin;
         DealerCode = dealership;
         ScanMethod = entryType;
@@ -28,6 +30,8 @@ public class Physical {
         Notes = notes;
         TimeStamp = date + " " + time;
         UserId = userId;
+        Latitude = latitude;
+        Longitude = longitude;
     }
 
     public String getVIN() {
@@ -64,6 +68,14 @@ public class Physical {
 
     public String getTimeStamp() {
         return TimeStamp;
+    }
+
+    public String getLatitude() {
+        return Latitude;
+    }
+
+    public String getLongitude() {
+        return Longitude;
     }
 
         @Override

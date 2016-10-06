@@ -24,6 +24,8 @@ public class DBRescan {
     public static final String RESCAN_COLUMN_SCANNED_DATE = "scannedDate";
     public static final String RESCAN_COLUMN_SCANNED_BY = "scannedBy";
     public static final String RESCAN_COLUMN_USER_ID = "userId";
+    public static final String RESCAN_COLUMN_LATITUDE = "latitude";
+    public static final String RESCAN_COLUMN_LONGITUDE = "longitude";
 
     public static boolean insertRescan(DBHelper dbh, String siid, String dealerCode, String vin, String assigned, String year, String make, String model, String color, String entryMethod, String scannedDate, String userId) {
         // siid, dealerCode, vin, assigned, year, make, model, color,entryMethod, scannedDate, userId
@@ -46,13 +48,15 @@ public class DBRescan {
         return true;
     }
 
-    public static boolean updateRescanByVin(DBHelper dbh, String vin, String entryMethod, String scannedDate, String scannedBy, String userId) {
+    public static boolean updateRescanByVin(DBHelper dbh, String vin, String entryMethod, String scannedDate, String scannedBy, String userId, String lat, String lng) {
         SQLiteDatabase db = dbh.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(RESCAN_COLUMN_ENTRY_METHOD, entryMethod);
         contentValues.put(RESCAN_COLUMN_SCANNED_DATE, scannedDate);
         //contentValues.put(RESCAN_COLUMN_SCANNED_BY, scannedBy);
         contentValues.put(RESCAN_COLUMN_USER_ID, userId);
+        contentValues.put(RESCAN_COLUMN_LATITUDE, lat);
+        contentValues.put(RESCAN_COLUMN_LONGITUDE, lng);
 
         db.update(RESCAN_TABLE_NAME, contentValues, "vin = ?", new String[]{vin});
 
@@ -176,7 +180,7 @@ public class DBRescan {
 
     }
 
-    public static ArrayList getRescabForUpload(DBHelper dbh, String user) {
+    public static ArrayList getRescanForUpload(DBHelper dbh, String user) {
         Cursor c = DBRescan.getCompletedRescansByUser(dbh, user);
 
         ArrayList rescan = new ArrayList();
@@ -201,10 +205,16 @@ public class DBRescan {
                 int scannedDateIndex = c.getColumnIndex("scannedDate");
                 String scannedDate = c.getString(scannedDateIndex);
 
+                int latitudeIndex = c.getColumnIndex("latitude");
+                String latitude = c.getString(latitudeIndex);
+
+                int longitudeIndex = c.getColumnIndex("longitude");
+                String longitude = c.getString(longitudeIndex);
+
                 int userIdIndex = c.getColumnIndex("userId");
                 String userId = c.getString(userIdIndex);
 
-                RescanComplete res = new RescanComplete(dealerCode, siid, entryMethod, vin, "0", "0", scannedDate);
+                RescanComplete res = new RescanComplete(dealerCode, siid, entryMethod, vin, latitude, longitude, scannedDate);
 
                 rescan.add(res);
             } while (c.moveToNext());

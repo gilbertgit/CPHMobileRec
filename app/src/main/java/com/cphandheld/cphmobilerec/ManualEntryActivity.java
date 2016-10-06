@@ -2,12 +2,16 @@ package com.cphandheld.cphmobilerec;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
+import android.location.Location;
 import android.media.AudioManager;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Editable;
 import android.text.Html;
@@ -41,6 +45,10 @@ public class ManualEntryActivity extends ActionBarActivity {
     String sentLot;
     String sentNewUsed;
     String appType;
+    private Location lastKnownLoc;
+    private String latitude;
+    private String longitude;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,10 +63,12 @@ public class ManualEntryActivity extends ActionBarActivity {
         appType = intent.getStringExtra("extraAppType");
         sentDealership = intent.getStringExtra("extraDealership");
         sentDealershipIndex = intent.getIntExtra("extraDealershipIndex", 0);
-        if(appType.equals("RESCAN")) {
+
+        if(!appType.equals("RESCAN")) {
             sentLot = intent.getStringExtra("extraLot");
             sentNewUsed = intent.getStringExtra("extraNewUsed");
         }
+
         dbHelper = new DBHelper(ManualEntryActivity.this);
         dbHelper.getWritableDatabase();
 
@@ -92,6 +102,10 @@ public class ManualEntryActivity extends ActionBarActivity {
 
         // Install the key handler
         mKeyboardView.setOnKeyboardActionListener(mOnKeyboardActionListener);
+
+        // Register GPS receiver
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mGPSReceiver, new IntentFilter(getString(R.string.intent_gps_receiver)));
     }
 
     @Override
@@ -134,6 +148,21 @@ public class ManualEntryActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    private BroadcastReceiver mGPSReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("Status");
+            Bundle b = intent.getBundleExtra("Location");
+            lastKnownLoc = (Location) b.getParcelable("Location");
+            if (lastKnownLoc != null) {
+                latitude = String.valueOf(lastKnownLoc.getLatitude());
+                longitude = String.valueOf(lastKnownLoc.getLongitude());
+
+            }
+        }
+    };
+
     private void InsertPhysical()
     {
         Calendar c = Calendar.getInstance();
@@ -141,7 +170,11 @@ public class ManualEntryActivity extends ActionBarActivity {
         SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
         String formattedDate = df.format(c.getTime());
         String formattedTime = tf.format(c.getTime());
-        DBVehicleEntry.insertVehicleEntry(dbHelper, editTextVin.getText().toString(),sentDealership, sentNewUsed, "Manual", sentLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
+
+        // insert into DB
+        DBVehicleEntry.insertVehicleEntry(dbHelper, editTextVin.getText().toString(),sentDealership, sentNewUsed, "Manual", sentLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id), latitude, longitude);
+
+        // Go back to Physical Screen
         Intent i = new Intent(ManualEntryActivity.this, PhysicalActivity.class);
         i.putExtra("back", true);
         i.putExtra("dealership", sentDealershipIndex);
@@ -157,7 +190,7 @@ public class ManualEntryActivity extends ActionBarActivity {
         String firstName = Utilities.currentUser.FirstName;
         String lastName = Utilities.currentUser.LastName;
         String scannedBy =  firstName + " " + lastName;
-        DBRescan.updateRescanByVin(dbHelper, editTextVin.getText().toString(), "Manual", Utilities.GetDateTimeString(), scannedBy, String.valueOf(Utilities.currentUser.Id));
+        DBRescan.updateRescanByVin(dbHelper, editTextVin.getText().toString(), "Manual", Utilities.GetDateTimeString(), scannedBy, String.valueOf(Utilities.currentUser.Id), latitude, longitude);
 
         Intent i = new Intent(ManualEntryActivity.this, RescanActivity.class);
         i.putExtra("back", true);

@@ -54,9 +54,9 @@ public class DBHelper extends SQLiteOpenHelper {
 
         db.execSQL("create table " + USER_TABLE_NAME + " (id integer primary key, firstname text, lastname text, pin text)");
         db.execSQL("create table " + ORGANIZATION_TABLE_NAME + " ( id integer primary key autoincrement, organizationId text, name text)");
-        db.execSQL("create table " + VEHICLE_ENTRY_TABLE_NAME + " ( id integer primary key autoincrement, vin text, dealership text, newused                text, entrytype text, lot text, date text, time text, notes text, userid text)");
+        db.execSQL("create table " + VEHICLE_ENTRY_TABLE_NAME + " ( id integer primary key autoincrement, vin text, dealership text, newused                text, entrytype text, lot text, date text, time text, notes text, userid text, latitude text, longitude text)");
         db.execSQL("create table " + DEALERSHIPS_TABLE_NAME + " (id integer primary key, userid text, dealercode text, name text, lot1name text, lot2name text, lot3name text, lot4name text, lot5name text, lot6name text, lot7name text, lot8name text, lot9name text)");
-        db.execSQL("create table " + RESCAN_TABLE_NAME + " (id integer primary key, siid text unique, dealerCode text, vin text, assigned text, year text, make text, model text, color text, entryMethod text, scannedDate text, userId text)");
+        db.execSQL("create table " + RESCAN_TABLE_NAME + " (id integer primary key, siid text unique, dealerCode text, vin text, assigned text, year text, make text, model text, color text, entryMethod text, scannedDate text, userId text, latitude text, longitude text)");
     }
 
     @Override
@@ -143,7 +143,7 @@ public class DBHelper extends SQLiteOpenHelper {
             exportDir.mkdirs();
         }
 
-        File file = new File(exportDir, "REC" + formattedDate +".csv");
+        File file = new File(exportDir, "REC-" + formattedDate +".csv");
         try {
             file.createNewFile();
             CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
@@ -152,7 +152,10 @@ public class DBHelper extends SQLiteOpenHelper {
             csvWrite.writeNext(curCSV.getColumnNames());
             while (curCSV.moveToNext()) {
                 //Which column you want to export
-                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
+                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
+                        curCSV.getString(3), curCSV.getString(4), curCSV.getString(5),
+                        curCSV.getString(6), curCSV.getString(7), curCSV.getString(8),
+                        curCSV.getString(9), curCSV.getString(10), curCSV.getString(11)};
                 csvWrite.writeNext(arrStr);
             }
             csvWrite.close();

@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.location.Location;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,6 +29,10 @@ public class TabRescanActivity extends Activity {
     private String vinReceived = "";
     DBHelper dbHelper;
 
+    private Location lastKnownLoc;
+    private String latitude;
+    private String longitude;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,6 +45,9 @@ public class TabRescanActivity extends Activity {
 
         rescans = new ArrayList();
         listAdapter = new RescanListAdapter(TabRescanActivity.this, 0, rescans, mTouchListener);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mGPSReceiver, new IntentFilter(getString(R.string.intent_gps_receiver)));
         rescanListView.setAdapter(listAdapter);
 
     }
@@ -72,6 +81,21 @@ public class TabRescanActivity extends Activity {
         super.onPause();
     }
 
+    private BroadcastReceiver mGPSReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("Status");
+            Bundle b = intent.getBundleExtra("Location");
+            lastKnownLoc = (Location) b.getParcelable("Location");
+            if (lastKnownLoc != null) {
+                latitude = String.valueOf(lastKnownLoc.getLatitude());
+                longitude = String.valueOf(lastKnownLoc.getLongitude());
+
+            }
+        }
+    };
+
     private class UpdaterBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -79,6 +103,7 @@ public class TabRescanActivity extends Activity {
             String action = intent.getAction();
             if(action.equals(getString(R.string.intent_data_refresh))) {
                 vinReceived = intent.getStringExtra("vin");
+
                 if (!vinReceived.equals("")) {
                     String method = intent.getStringExtra("method");
                     if (RemoveRescan(vinReceived, method)) {
@@ -113,7 +138,7 @@ public class TabRescanActivity extends Activity {
 
         if(dataUpdated) {
             rescans.removeAll(rescansToRemove);
-            DBRescan.updateRescanByVin(dbHelper, vin, method, Utilities.GetDateTimeString(), scannedBy, String.valueOf(Utilities.currentUser.Id));
+            DBRescan.updateRescanByVin(dbHelper, vin, method, Utilities.GetDateTimeString(), scannedBy, String.valueOf(Utilities.currentUser.Id), latitude, longitude);
             SetRescanCount();
         }
         return dataUpdated;

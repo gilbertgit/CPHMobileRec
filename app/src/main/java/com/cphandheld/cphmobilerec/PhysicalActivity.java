@@ -10,9 +10,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Rect;
+import android.location.Location;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Vibrator;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
 import android.util.Log;
@@ -31,27 +35,23 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParser;
 import com.symbol.emdk.EMDKManager;
 import com.symbol.emdk.EMDKManager.EMDKListener;
 import com.symbol.emdk.EMDKResults;
 import com.symbol.emdk.ProfileManager;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+
 
 /**
  * Created by titan on 4/8/16.
@@ -115,11 +116,20 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     boolean mItemPressed = false;
     HashMap<Long, Integer> mItemIdTopMap = new HashMap<Long, Integer>();
 
-
     private static final int SWIPE_DURATION = 250;
     private static final int MOVE_DURATION = 150;
+    private Vibrator vib;
+    private MediaPlayer mp;
 
     //////////////////////////////////////////////////////////////
+
+    private GPSHelper gpsHelper;
+    Intent gpsServiceIntent;
+    private Location lastKnownLoc;
+    private String latitude;
+    private String longitude;
+
+    ActionBar actionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,6 +139,18 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         ActionBar actionBar = getActionBar();
         actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>PHYSICAL SCAN</font>"));
         actionBar.show();
+
+//        LayoutInflater menuInflater = (LayoutInflater) this
+//                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+//        View v = menuInflater.inflate(R.layout.physical_custom_actionbar, null);
+//        ActionBar actionBar = getSupportActionBar();
+//        actionBar.setDisplayHomeAsUpEnabled(false);
+//        actionBar.setDisplayShowHomeEnabled (false);
+//        actionBar.setDisplayShowCustomEnabled(true);
+//        actionBar.setDisplayShowTitleEnabled(false);
+//        actionBar.setCustomView(v);
+
+        setActionBar();
 
         mProgressDialog = new ProgressDialog(PhysicalActivity.this);
         mProgressDialog.setIndeterminate(false);
@@ -183,7 +205,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                                        int arg2, long arg3) {
                 selectedValueNewUsed = spinnerNewUsedMap.get(spinnerNewUsed.getSelectedItem().toString());
                 selectedNewUsed = spinnerNewUsed.getSelectedItem().toString();
-
             }
 
             @Override
@@ -195,16 +216,51 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
         EMDKResults results = EMDKManager.getEMDKManager(getApplicationContext(), this);
 
-        //GetDealershipsDB();
+        // Create instance of service so we have context
+        gpsHelper = new GPSHelper(PhysicalActivity.this);
+
+        // check if GPS enabled
+        if (!gpsHelper.canGetLocation()) {
+            // can't get location
+            // GPS or Network is not enabled
+            // Ask user to enable GPS/network in settings
+            gpsHelper.showSettingsAlert();
+        }
+
+        gpsServiceIntent = new Intent(this, GPSHelper.class);
+        startService(gpsServiceIntent);
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                mGPSReceiver, new IntentFilter(getString(R.string.intent_gps_receiver)));
 
     }
 
-    public void onBackPressed() {
-        Toast toast = Toast.makeText(getApplicationContext(), "Logged out", Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.BOTTOM, 0, 75);
-        toast.show();
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        // Save the user's current game state
+        savedInstanceState.putInt("SELECTED_DEALER", dealershipSelection);
+        savedInstanceState.putString("SELECTED_LOT", selectedLot);
 
-        Intent i = new Intent(this, LoginActivity.class);
+        // Always call the superclass so it can save the view hierarchy state
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        // Always call the superclass so it can restore the view hierarchy
+        super.onRestoreInstanceState(savedInstanceState);
+
+        // Restore state members from saved instance
+        dealershipSelection = savedInstanceState.getInt("SELECTED_DEALER");
+        spinnerDealership.setSelection(dealershipSelection);
+
+        lotSelection = savedInstanceState.getString("SELECTED_LOT");
+        spinnerLot.setSelection(lotList.indexOf(lotSelection), true);
+        Log.v(TAG, "onRestoreInstanceState");
+    }
+
+    public void onBackPressed() {
+        Intent i = new Intent(this, MainActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(i);
@@ -226,6 +282,21 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             }
         }
 
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        Log.v(TAG, "onDestroy");
+
+        gpsHelper.stopUsingGPS();
+
+        stopService(gpsServiceIntent);
+
+        if(emdkManager != null)
+            this.emdkManager.release();
+
+        super.onDestroy();
     }
 
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
@@ -455,7 +526,11 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
                 Dealership d = DBUsers.setDealershipData(c);
 
-                if (c.getPosition() == 0) {
+                int pos = 0;
+                if (dealershipSelection != 0)
+                    pos = dealershipSelection;
+
+                if (c.getPosition() == pos) {
                     lotList.add(d.Lot1Name);
                     lotList.add(d.Lot2Name);
                     lotList.add(d.Lot3Name);
@@ -496,7 +571,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             if (dealershipSelection == 0)
                 spinnerDealership.setSelection(0);
             else {
-                Log.v("dealershipSelection:", String.valueOf(dealershipSelection));
                 spinnerDealership.setSelection(dealershipSelection, true);
             }
 
@@ -506,6 +580,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 public void onItemSelected(AdapterView<?> arg0, View arg1,
                                            int arg2, long arg3) {
                     selectedDealership = spinnerDealershipMap.get(spinnerDealership.getSelectedItem().toString());
+                    dealershipSelection = spinnerDealership.getSelectedItemPosition();
 
                     lotList.clear();
 
@@ -531,8 +606,9 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                     // reset the lot spinner
                     lotAdapter.notifyDataSetChanged();
                     spinnerLot.setSelection(0);
+                    //spinnerLot.setSelection(lotList.indexOf(lotSelection), true);
                     selectedLot = spinnerLot.getSelectedItem().toString();
-                    GetPhysicalDB(false);
+                    GetPhysicalDB();
                 }
 
                 @Override
@@ -544,6 +620,23 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         }
     }
 
+    private void setActionBar(){
+//        actionBar = getSupportActionBar();
+//        actionBar.setHomeButtonEnabled(false);
+//        actionBar.setDisplayShowHomeEnabled(false);
+//        actionBar.setDisplayUseLogoEnabled(false);
+//        actionBar.setDisplayShowCustomEnabled(true);
+//        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_SHOW_HOME);
+//
+//        LayoutInflater linflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
+//        View view = linflater.inflate(R.layout.physical_custom_actionbar, null);
+//        ActionBar.LayoutParams lp = new ActionBar.LayoutParams(
+//                ActionBar.LayoutParams.WRAP_CONTENT,
+//                ActionBar.LayoutParams.WRAP_CONTENT);
+//        lp.gravity = Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL;
+//        view.setLayoutParams(lp);
+//        getSupportActionBar().setCustomView(view, lp);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -555,6 +648,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
+        Log.v(TAG, "onOptionsItemSelected");
         int id = item.getItemId();
         switch (id) {
             case R.id.action_manual:
@@ -603,6 +697,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     @Override
     protected void onResume() {
 // TODO Auto-generated method stub
+        Log.v(TAG, "onResume");
         super.onResume();
 
         IntentFilter intentFilter = new IntentFilter(getString(R.string.scan_intent));
@@ -623,15 +718,33 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                     if (data != null && data.length() > 0) {
                         String barcode = Utilities.CheckVinSpecialCases(data);
 
+                        if (barcode.length() != 6 && barcode.length() != 8 && barcode.length() != 17 && barcode.toUpperCase().contains("I,O,Q")) {
+                            // alert user that vin is not valid
+                            try {
+                                mp = MediaPlayer.create(PhysicalActivity.this, R.raw.error);
+                                mp.setVolume(1, 1);
+                                vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+                                long[] pattern = {100, 100, 500};
+                                vib.vibrate(pattern, 0);
+                                mp.start();
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                        }
+
                         Calendar c = Calendar.getInstance();
                         SimpleDateFormat df = new SimpleDateFormat("MM/dd/yy");
                         SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
                         String formattedDate = df.format(c.getTime());
                         String formattedTime = tf.format(c.getTime());
 
+                        Log.v(TAG, "Position: " + latitude + "," + longitude);
+
                         if (DBVehicleEntry.isVinScanned(dbHelper, barcode)) {
-                            DBVehicleEntry.updateEntryDate(dbHelper, barcode, formattedDate, formattedTime);
-                            GetPhysicalDB(true);
+                            DBVehicleEntry.updateEntry(dbHelper, barcode, formattedDate, formattedTime, latitude, longitude);
+                            GetPhysicalDB();
                         } else {
                             Animation anim = AnimationUtils.loadAnimation(
                                     PhysicalActivity.this, android.R.anim.slide_in_left
@@ -644,8 +757,9 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                             else
                                 vehicleList.getChildAt(0).startAnimation(anim);
 
-                            phys.add(0, new Physical(barcode, selectedDealership, "Scanned", selectedValueNewUsed, formattedDate, formattedTime, selectedLot, "", String.valueOf(Utilities.currentUser.Id)));
-                            DBVehicleEntry.insertVehicleEntry(dbHelper, barcode, selectedDealership, selectedValueNewUsed, "Scanned", selectedLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id));
+                            phys.add(0, new Physical(barcode, selectedDealership, "Scanned", selectedValueNewUsed, formattedDate, formattedTime, selectedLot, "", String.valueOf(Utilities.currentUser.Id), latitude, longitude));
+
+                            DBVehicleEntry.insertVehicleEntry(dbHelper, barcode, selectedDealership, selectedValueNewUsed, "Scanned", selectedLot, formattedDate, formattedTime, String.valueOf(Utilities.currentUser.Id), latitude, longitude);
 
                             textCount.setText("Count(" + phys.size() + ")");
                             vehicleList.smoothScrollToPosition(0);
@@ -659,8 +773,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
                             }, anim.getDuration());
 
-
-                            //vehicleList.setLayoutAnimation();
                         }
 
 
@@ -681,6 +793,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             public void onItemSelected(AdapterView<?> arg0, View arg1,
                                        int arg2, long arg3) {
                 selectedLot = spinnerLot.getSelectedItem().toString();
+                lotSelection = spinnerLot.getSelectedItem().toString();
             }
 
             @Override
@@ -690,10 +803,25 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             }
         });
 
-        GetPhysicalDB(true);
+        GetPhysicalDB();
     }
 
-    public void GetPhysicalDB(boolean firstLoad) {
+    private BroadcastReceiver mGPSReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Get extra data included in the Intent
+            String message = intent.getStringExtra("Status");
+            Bundle b = intent.getBundleExtra("Location");
+            lastKnownLoc = (Location) b.getParcelable("Location");
+            if (lastKnownLoc != null) {
+                latitude = String.valueOf(lastKnownLoc.getLatitude());
+                longitude = String.valueOf(lastKnownLoc.getLongitude());
+
+            }
+        }
+    };
+
+    public void GetPhysicalDB() {
 
         phys = new ArrayList();
         listAdapter = new PhysicalListAdapter(PhysicalActivity.this, 0, phys, mTouchListener);
@@ -730,7 +858,13 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 int userIdIndex = c.getColumnIndex("userid");
                 String userId = c.getString(userIdIndex);
 
-                Physical phy = new Physical(vin, dealership, entryType, newUsed, date, time, lot, notes, userId);
+                int latitudeIndex = c.getColumnIndex("latitude");
+                String latitude = c.getString(latitudeIndex);
+
+                int longitudeIndex = c.getColumnIndex("longitude");
+                String longitude = c.getString(longitudeIndex);
+
+                Physical phy = new Physical(vin, dealership, entryType, newUsed, date, time, lot, notes, userId, latitude, longitude);
                 phys.add(phy);
             } while (c.moveToNext());
         }
@@ -774,6 +908,8 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     protected void onPause() {
         super.onPause();
 
+        // Kill the GPS receiver
+        //gpsHelper.stopUsingGPS();
         //Register our receiver.
         this.unregisterReceiver(this.EMDKReceiver);
     }

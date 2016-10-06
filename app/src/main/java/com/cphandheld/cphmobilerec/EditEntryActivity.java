@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,12 +20,14 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by titan on 4/13/16.
  */
 public class EditEntryActivity extends ActionBarActivity {
 
+    private String TAG = "EditEntryActivity";
     Spinner spinnerNewUsed;
     Spinner spinnerLot;
     Spinner spinnerDealership;
@@ -41,6 +44,7 @@ public class EditEntryActivity extends ActionBarActivity {
     String lotIndex;
     int sentDealershipIndex;
     int sentDealerPos;
+    int selectionCounter = 0;
 
     DBHelper dbHelper;
 
@@ -82,6 +86,8 @@ public class EditEntryActivity extends ActionBarActivity {
         dbHelper = new DBHelper(EditEntryActivity.this);
         dbHelper.getWritableDatabase();
 
+        GetDealershipsDB();
+
         HashMap<String,String> spinnerNewUsedMap = new HashMap<String, String>();
         spinnerNewUsedMap.put("New", "0");
         spinnerNewUsedMap.put("Used", "1");
@@ -95,8 +101,8 @@ public class EditEntryActivity extends ActionBarActivity {
         ArrayAdapter<String> newUsedAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, listNewUsed);
         newUsedAdapter.setDropDownViewResource(R.layout.generic_list);
         spinnerNewUsed.setAdapter(newUsedAdapter);
-        int position = newUsedAdapter.getPosition(sentNewUsed);
-        spinnerNewUsed.setSelection(position);
+        //int position = newUsedAdapter.getPosition(sentNewUsed);
+
         spinnerNewUsed.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
@@ -113,7 +119,13 @@ public class EditEntryActivity extends ActionBarActivity {
             }
         });
 
-        GetDealershipsDB();
+        for (Map.Entry<String, String> e : spinnerNewUsedMap.entrySet()) {
+            String key = e.getKey();
+            String value = e.getValue();
+
+            if(key.equals(sentNewUsed))
+                spinnerNewUsed.setSelection(newUsedAdapter.getPosition(key));
+        }
 
         int p = dealershipAdapter.getPosition(GetDealershipForSpinner());
         spinnerDealership.setSelection(p);
@@ -121,15 +133,19 @@ public class EditEntryActivity extends ActionBarActivity {
         lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, lotList);
         lotAdapter.setDropDownViewResource(R.layout.generic_list);
         spinnerLot.setAdapter(lotAdapter);
+        Log.v(TAG, "SentLot: " + sentLot);
         int positionLot = lotAdapter.getPosition(sentLot);
+        Log.v(TAG, "SentLot Position: " + positionLot);
         spinnerLot.setSelection(positionLot);
         sentLot = spinnerLot.getSelectedItem().toString();
+        Log.v(TAG, "Selected SentLot: " + sentLot);
         spinnerLot.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1,
                                        int arg2, long arg3) {
                 sentLot = spinnerLot.getSelectedItem().toString();
+                Log.v(TAG, "Lot Selected: " + sentLot);
             }
 
             @Override
@@ -138,6 +154,12 @@ public class EditEntryActivity extends ActionBarActivity {
 
             }
         });
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
     }
 
     @Override
@@ -240,7 +262,6 @@ public class EditEntryActivity extends ActionBarActivity {
 
         if (dealershipList != null && dealershipList.size() > 0) {
             //lotAdapter.notifyDataSetChanged();
-
             dealershipAdapter = new ArrayAdapter<Dealership>(this, R.layout.generic_list, dealershipList);
             dealershipAdapter.setDropDownViewResource(R.layout.generic_list);
             spinnerDealership.setAdapter(dealershipAdapter);
@@ -249,7 +270,13 @@ public class EditEntryActivity extends ActionBarActivity {
                 @Override
                 public void onItemSelected(AdapterView<?> arg0, View arg1,
                                            int arg2, long arg3) {
+
+                    selectionCounter = selectionCounter++;
+                    if(selectionCounter <= 2)
+                        return;
+
                     sentDealership = spinnerDealershipMap.get(spinnerDealership.getSelectedItem().toString());
+                    Log.v(TAG, "Dealership Selected: " +sentDealership);
                     //lotList = new ArrayList<String>(9);
                     lotList.clear();
                     if (!dealershipAdapter.getItem(arg2).Lot1Name.equals(""))

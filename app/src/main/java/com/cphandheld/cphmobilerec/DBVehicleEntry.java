@@ -21,8 +21,10 @@ public class DBVehicleEntry {
     public static final String VEHICLE_ENTRY_COLUMN_DATE = "date";
     public static final String VEHICLE_ENTRY_COLUMN_TIME = "time";
     public static final String VEHICLE_ENTRY_COLUMN_NOTES = "notes";
+    public static final String VEHICLE_ENTRY_COLUMN_LATITUDE = "latitude";
+    public static final String VEHICLE_ENTRY_COLUMN_LONGITUDE = "longitude";
 
-    public static boolean insertVehicleEntry(DBHelper dbh, String vin, String dealership, String newUsed, String entryType, String lot, String date, String time, String userId)
+    public static boolean insertVehicleEntry(DBHelper dbh, String vin, String dealership, String newUsed, String entryType, String lot, String date, String time, String userId, String lat, String lng)
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -35,10 +37,11 @@ public class DBVehicleEntry {
         contentValues.put(VEHICLE_ENTRY_COLUMN_TIME, time);
         contentValues.put(VEHICLE_ENTRY_COLUMN_NOTES, "");
         contentValues.put(VEHICLE_ENTRY_COLUMN_USER_ID, userId);
+        contentValues.put(VEHICLE_ENTRY_COLUMN_LATITUDE, lat);
+        contentValues.put(VEHICLE_ENTRY_COLUMN_LONGITUDE, lng);
 
         db.insertWithOnConflict(VEHICLE_ENTRY_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
 
-       // db.insert(VEHICLE_ENTRY_TABLE_NAME, null, contentValues);
         return true;
     }
 
@@ -59,12 +62,14 @@ public class DBVehicleEntry {
         return true;
     }
 
-    public static boolean updateEntryDate(DBHelper dbh, String vin, String date, String time)
+    public static boolean updateEntry(DBHelper dbh, String vin, String date, String time, String lat, String lng)
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put(VEHICLE_ENTRY_COLUMN_DATE, date);
         contentValues.put(VEHICLE_ENTRY_COLUMN_TIME, time);
+        contentValues.put(VEHICLE_ENTRY_COLUMN_LATITUDE, lat);
+        contentValues.put(VEHICLE_ENTRY_COLUMN_LONGITUDE, lng);
 
         db.update(VEHICLE_ENTRY_TABLE_NAME, contentValues, "vin = ?", new String[]{vin});
         return true;
@@ -105,7 +110,7 @@ public class DBVehicleEntry {
         SQLiteDatabase db = dbh.getReadableDatabase();
 //        Cursor res =  db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by id DESC" , new String[] {dealership});
 
-        Cursor res =  db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by date DESC, time DESC" , new String[] {dealership});
+        Cursor res =  db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by id DESC" , new String[] {dealership});
         return res;
     }
 
@@ -175,7 +180,13 @@ public class DBVehicleEntry {
                 int userIdIndex = c.getColumnIndex("userid");
                 String userId = c.getString(userIdIndex);
 
-                Physical phy = new Physical(vin, dealership, entryType, newUsed, date, time, lot, notes, userId);
+                int latitudeIndex = c.getColumnIndex("latitude");
+                String latitude = c.getString(latitudeIndex);
+
+                int longitudeIndex = c.getColumnIndex("longitude");
+                String longitude = c.getString(longitudeIndex);
+
+                Physical phy = new Physical(vin, dealership, entryType, newUsed, date, time, lot, notes, userId, latitude, longitude);
                 physical.add(phy);
             } while (c.moveToNext());
         }

@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.location.Location;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -42,6 +44,10 @@ public class TabRescanDoneActivity extends Activity {
         completedRescans = new ArrayList();
         listAdapter = new RescanListAdapter(TabRescanDoneActivity.this, 0, completedRescans, mTouchListener);
         doneRescanListView.setAdapter(listAdapter);
+
+//        LocalBroadcastManager.getInstance(this).registerReceiver(
+//                mGPSReceiver, new IntentFilter(getString(R.string.intent_gps_receiver)));
+
     }
 
     private void SetRescanCount()
@@ -68,6 +74,21 @@ public class TabRescanDoneActivity extends Activity {
         unregisterReceiver(this.updaterBroadcastReceiver);
         super.onPause();
     }
+
+//    private BroadcastReceiver mGPSReceiver = new BroadcastReceiver() {
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            // Get extra data included in the Intent
+//            String message = intent.getStringExtra("Status");
+//            Bundle b = intent.getBundleExtra("Location");
+//            lastKnownLoc = (Location) b.getParcelable("Location");
+//            if (lastKnownLoc != null) {
+//                latitude = String.valueOf(lastKnownLoc.getLatitude());
+//                longitude = String.valueOf(lastKnownLoc.getLongitude());
+//
+//            }
+//        }
+//    };
 
     private class UpdaterBroadcastReceiver extends BroadcastReceiver {
         @Override

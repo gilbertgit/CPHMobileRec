@@ -479,13 +479,13 @@ public class LoginActivity extends ActionBarActivity {
                 startActivity(i);
             }
 
-                if (Utilities.currentUser == null) {
-                    Toast toast = Toast.makeText(getApplicationContext(), "Invalid PIN", Toast.LENGTH_SHORT);
-                    toast.setGravity(Gravity.BOTTOM, 0, 75);
-                    toast.show();
+            if (Utilities.currentUser == null) {
+                Toast toast = Toast.makeText(getApplicationContext(), "Invalid PIN", Toast.LENGTH_SHORT);
+                toast.setGravity(Gravity.BOTTOM, 0, 75);
+                toast.show();
 
-                    YoyoPin();
-                }
+                YoyoPin();
+            }
 
             mProgressDialog.dismiss();
         }

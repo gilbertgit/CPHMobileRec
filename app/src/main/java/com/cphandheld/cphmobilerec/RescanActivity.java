@@ -312,7 +312,13 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
     }
 
     public void GetDealershipsDB() {
-        Cursor c = DBUsers.getDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+
+        Cursor c;
+        if(DBUsers.hasFilteredDealerships(dbHelper))
+            c = DBUsers.getFilteredDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+        else
+            c = DBUsers.getDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+
         dealershipList = new ArrayList(c.getCount());
         spinnerDealershipMap.clear();
 

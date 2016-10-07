@@ -61,6 +61,33 @@ public class DBUsers {
         }
     }
 
+    public static boolean hasFilteredDealerships(DBHelper dbh) {
+        Cursor c = null;
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        boolean result = false;
+        try {
+
+            String query = "select * from " + DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME;
+
+            c = db.rawQuery(query, null);
+            int count  = c.getCount();
+            boolean test = count > 1;
+            if(test) {
+                result = true;
+            }
+        }
+        finally {
+            if (c != null) {
+                c.close();
+            }
+            if (db != null) {
+                db.close();
+            }
+
+            return result;
+        }
+    }
+
     public static boolean insertUser(DBHelper dbh, int userId, int pin, String firstName, String lastName)
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
@@ -99,10 +126,47 @@ public class DBUsers {
         return true;
     }
 
+    public static boolean insertSelectedDealership(DBHelper dbh, int userId, int id, String name, String dealerCode, String lot1Name, String lot2Name, String lot3Name, String lot4Name, String lot5Name, String lot6Name, String lot7Name, String lot8Name, String lot9Name)
+    {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(DEALERSHIPS_COLUMN_USER_ID, userId);
+        contentValues.put(DEALERSHIPS_COLUMN_ID, id);
+        contentValues.put(DEALERSHIPS_COLUMN_NAME, name);
+        contentValues.put(DEALERSHIPS_COLUMN_DEALER_CODE, dealerCode);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_1_NAME, lot1Name);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_2_NAME, lot2Name);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_3_NAME, lot3Name);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_4_NAME, lot4Name);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_5_NAME, lot5Name);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_6_NAME, lot6Name);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_7_NAME, lot7Name);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_8_NAME, lot8Name);
+        contentValues.put(DEALERSHIPS_COLUMN_LOT_9_NAME, lot9Name);
+
+
+        // this is an insert/update
+        db.insertWithOnConflict(DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME, null, contentValues, SQLiteDatabase.CONFLICT_REPLACE);
+        return true;
+    }
+
+
     public static Cursor getDealershipsByUser(DBHelper dbh, String userId){
         SQLiteDatabase db = dbh.getReadableDatabase();
         Cursor res =  db.rawQuery( "select * from " + DEALERSHIPS_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_USER_ID + " = ? order by id DESC" , new String[] {userId});
         return res;
+    }
+
+    public static Cursor getFilteredDealershipsByUser(DBHelper dbh, String userId){
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        Cursor res =  db.rawQuery( "select * from " + DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_USER_ID + " = ? order by id DESC" , new String[] {userId});
+        return res;
+    }
+
+    public static boolean deleteFilteredDealership(DBHelper dbh, String dealerCode)
+    {
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        return db.delete(DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME, DEALERSHIPS_COLUMN_DEALER_CODE + " = ?", new String[] {dealerCode}) > 0;
     }
 
     public static Dealership setDealershipData(Cursor c)

@@ -56,7 +56,7 @@ public class Utilities {
     }
 
     public static String CheckVinSpecialCases(String vin) {
-        String formattedVIN = vin;
+        String formattedVIN = vin.trim();
 
         if (vin.length() > 17) {
             if (vin.substring(0, 1).toUpperCase().equals("I") || vin.substring(0, 1).toUpperCase().equals("A") || vin.substring(0, 1).equals(" ")) // Ford, Mazda, Honda Issues

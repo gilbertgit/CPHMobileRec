@@ -38,6 +38,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public static final String DEALERSHIPS_TABLE_NAME = "dealership";
 
+    public static final String DEALERSHIPS_SELECTED_TABLE_NAME = "dealershipsSelected";
+
     public static final String RESCAN_TABLE_NAME = "rescan";
     protected SQLiteDatabase sqdb;
     DBHelper dbHelper;
@@ -56,6 +58,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("create table " + ORGANIZATION_TABLE_NAME + " ( id integer primary key autoincrement, organizationId text, name text)");
         db.execSQL("create table " + VEHICLE_ENTRY_TABLE_NAME + " ( id integer primary key autoincrement, vin text, dealership text, newused                text, entrytype text, lot text, date text, time text, notes text, userid text, latitude text, longitude text)");
         db.execSQL("create table " + DEALERSHIPS_TABLE_NAME + " (id integer primary key, userid text, dealercode text, name text, lot1name text, lot2name text, lot3name text, lot4name text, lot5name text, lot6name text, lot7name text, lot8name text, lot9name text)");
+        db.execSQL("create table " + DEALERSHIPS_SELECTED_TABLE_NAME + " (id integer primary key, userid text, dealercode text, name text, lot1name text, lot2name text, lot3name text, lot4name text, lot5name text, lot6name text, lot7name text, lot8name text, lot9name text)");
         db.execSQL("create table " + RESCAN_TABLE_NAME + " (id integer primary key, siid text unique, dealerCode text, vin text, assigned text, year text, make text, model text, color text, entryMethod text, scannedDate text, userId text, latitude text, longitude text)");
     }
 

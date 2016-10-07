@@ -31,4 +31,19 @@
         android:layout_alignStart="@+id/buttonPhysical"
         android:layout_marginTop="20dp"/>
 
+    <Button
+        android:id="@+id/buttonFilterDealerships"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:padding="5dp"
+        android:fontFamily="Lato Regular"
+        android:background="@color/colorLoginOrgText"
+        android:textColor="@android:color/white"
+        android:text="FILTER DEALERSHIPS"
+        android:textSize="20sp"
+        android:layout_marginRight="10dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="104dp"/>
+
 </RelativeLayout>

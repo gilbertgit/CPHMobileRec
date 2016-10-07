@@ -19,6 +19,8 @@ public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
     private Button buttonPhysical;
     private Button buttonRescan;
+    private Button buttonFilterDealerships;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -32,6 +34,7 @@ public class MainActivity extends Activity {
 
         buttonPhysical = (Button)findViewById(R.id.buttonPhysical);
         buttonRescan = (Button)findViewById(R.id.buttonRescan);
+        buttonFilterDealerships = (Button)(findViewById(R.id.buttonFilterDealerships));
 
         buttonPhysical.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -45,6 +48,14 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(MainActivity.this, RescanActivity.class);
+                startActivity(i);
+            }
+        });
+
+        buttonFilterDealerships.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this, FilterDealershipActivity.class);
                 startActivity(i);
             }
         });

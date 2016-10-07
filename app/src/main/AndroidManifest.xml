@@ -107,6 +107,13 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".FilterDealershipActivity"
+            android:label="Filter Dealerships"
+            android:screenOrientation="portrait"
+            android:theme="@style/MyCustomTheme">
+        </activity>
+
     </application>
 
 </manifest>

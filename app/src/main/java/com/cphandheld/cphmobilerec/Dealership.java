@@ -23,6 +23,14 @@ public class Dealership implements Serializable
     Dealership() {
     }
 
+    public String getDealerName() {
+        return Name;
+    }
+
+    public String getDealerCode() {
+        return DealerCode;
+    }
+
     @Override
     public String toString() {
         return this.Name;

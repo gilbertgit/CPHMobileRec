@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="ALL DEALERSHIPS:"
+        android:id="@+id/textView3"
+        android:background="#326bb2"
+        android:textColor="#FFF"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:paddingLeft="10dp"/>
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="300dp"
+        android:id="@+id/listAllDealerships"
+        android:layout_below="@id/textView3"
+        android:divider="@color/colorDefaultBg"
+        android:dividerHeight="2dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="FILTERED DEALERSHIPS:"
+        android:id="@+id/textFilteredHeader"
+        android:layout_below="@+id/listAllDealerships"
+        android:background="#326bb2"
+        android:textColor="#FFF"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:paddingLeft="10dp"/>
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="250dp"
+        android:id="@+id/listFilteredDealerships"
+        android:layout_below="@id/textFilteredHeader"
+        android:divider="@color/colorDefaultBg"
+        android:dividerHeight="2dp"/>
+
+
+</RelativeLayout>

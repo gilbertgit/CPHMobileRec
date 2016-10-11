@@ -9,7 +9,7 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="ALL DEALERSHIPS:"
         android:id="@+id/textView3"
-        android:background="#326bb2"
+        android:background="@color/colorHeader"
         android:textColor="#FFF"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
@@ -22,7 +22,7 @@
         android:layout_height="300dp"
         android:id="@+id/listAllDealerships"
         android:layout_below="@id/textView3"
-        android:divider="@color/colorDefaultBg"
+        android:divider="@color/common_action_bar_splitter"
         android:dividerHeight="2dp"/>
 
     <TextView
@@ -43,7 +43,7 @@
         android:layout_height="250dp"
         android:id="@+id/listFilteredDealerships"
         android:layout_below="@id/textFilteredHeader"
-        android:divider="@color/colorDefaultBg"
+        android:divider="@color/common_action_bar_splitter"
         android:dividerHeight="2dp"/>
 
 

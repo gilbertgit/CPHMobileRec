@@ -63,6 +63,8 @@ public class Utilities {
                 formattedVIN = vin.substring(1, 18);
             else if (vin.length() == 18)
                 formattedVIN = vin.substring(0, 17); // Lexus Issue
+
+            formattedVIN = formattedVIN.substring(0,20);
         }
 
         return formattedVIN;
@@ -183,5 +185,26 @@ public class Utilities {
             }
         }
         return false;
+    }
+
+    public static boolean isValidVinLength(String vin)
+    {
+        boolean result = false;
+        if(vin.length() == 6 || vin.length() == 8 || vin.length() == 17)
+            result = true;
+
+        return result;
+    }
+
+    public static boolean hasValidVinCharacters(String vin) {
+        boolean result = false;
+        if(!vin.toUpperCase().contains("I,O,Q"))
+            result = true;
+
+        return result;
+    }
+
+    public static boolean isValidVin(String vin) {
+        return isValidVinLength(vin) && hasValidVinCharacters(vin);
     }
 }

@@ -12,6 +12,8 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
+import com.splunk.mint.Mint;
+
 import java.util.ArrayList;
 
 /**
@@ -34,7 +36,7 @@ public class FilterDealershipActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter_dealerships);
-
+        Mint.leaveBreadcrumb("FilterDealershipActivity-onCreate");
         ActionBar actionBar = getActionBar();
         actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>Filter Dealership</font>"));
         actionBar.hide();
@@ -49,9 +51,9 @@ public class FilterDealershipActivity extends Activity {
 
     @Override
     protected void onResume() {
-
-        Log.v(TAG, "onResume");
         super.onResume();
+        Log.v(TAG, "onResume");
+        Mint.leaveBreadcrumb("FilterDealershipActivity-onResume");
 
         filteredDealershipsList = new ArrayList();
         filteredDealershipsAdapter = new DealershipListViewAdapter(FilterDealershipActivity.this, 0, filteredDealershipsList, mFilteredDealershipsTouchListener);

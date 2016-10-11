@@ -4,6 +4,8 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import java.util.ArrayList;
+
 /**
  * Created by titan on 4/15/16.
  */
@@ -61,19 +63,46 @@ public class DBUsers {
         }
     }
 
-    public static boolean hasFilteredDealerships(DBHelper dbh) {
+    public static boolean hasFilteredDealerships(DBHelper dbh, String userId) {
         Cursor c = null;
         SQLiteDatabase db = dbh.getReadableDatabase();
         boolean result = false;
         try {
 
-            String query = "select * from " + DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME;
+            String query = "select * from " + DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_USER_ID + " = ?";
 
-            c = db.rawQuery(query, null);
+            c = db.rawQuery(query, new String[] {userId});
             int count  = c.getCount();
             boolean test = count > 1;
             if(test) {
                 result = true;
+            }
+        }
+        finally {
+            if (c != null) {
+                c.close();
+            }
+            if (db != null) {
+                db.close();
+            }
+
+            return result;
+        }
+    }
+
+    public static boolean isDealershipStored(DBHelper dbh, String dealerCode, String userId) {
+        Cursor c = null;
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        boolean result = true;
+        try {
+
+            String query = "select * from " + DEALERSHIPS_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_DEALER_CODE + " = ? and " + DEALERSHIPS_COLUMN_USER_ID + " = ?";
+
+            c = db.rawQuery(query, new String[] {dealerCode, userId});
+            int count  = c.getCount();
+            boolean test = count >= 1;
+            if(!test) {
+                result = false;
             }
         }
         finally {
@@ -153,13 +182,13 @@ public class DBUsers {
 
     public static Cursor getDealershipsByUser(DBHelper dbh, String userId){
         SQLiteDatabase db = dbh.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from " + DEALERSHIPS_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_USER_ID + " = ? order by id DESC" , new String[] {userId});
+        Cursor res =  db.rawQuery( "select * from " + DEALERSHIPS_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_USER_ID + " = ? order by name ASC" , new String[] {userId});
         return res;
     }
 
     public static Cursor getFilteredDealershipsByUser(DBHelper dbh, String userId){
         SQLiteDatabase db = dbh.getReadableDatabase();
-        Cursor res =  db.rawQuery( "select * from " + DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_USER_ID + " = ? order by id DESC" , new String[] {userId});
+        Cursor res =  db.rawQuery( "select * from " + DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_USER_ID + " = ? order by name ASC" , new String[] {userId});
         return res;
     }
 
@@ -167,6 +196,40 @@ public class DBUsers {
     {
         SQLiteDatabase db = dbh.getReadableDatabase();
         return db.delete(DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME, DEALERSHIPS_COLUMN_DEALER_CODE + " = ?", new String[] {dealerCode}) > 0;
+    }
+
+    public static boolean clearDealerships(DBHelper dbh, String userId)
+    {
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        return db.delete(DEALERSHIPS_TABLE_NAME, DEALERSHIPS_COLUMN_USER_ID + " = ?", new String[] {userId}) > 0;
+    }
+
+    public static Dealership getFilteredDealership(DBHelper dbh, String dealerCode)
+    {
+        Dealership dealership = null;
+        SQLiteDatabase db = dbh.getReadableDatabase();
+        Cursor c = db.rawQuery("select * from " + DBHelper.DEALERSHIPS_SELECTED_TABLE_NAME + " where " + DEALERSHIPS_COLUMN_DEALER_CODE + " = ? " , new String[] {dealerCode});
+
+        if(c.getCount() > 0)
+            dealership = setDealershipData(c);
+
+            return dealership;
+    }
+
+    public static ArrayList<Dealership> setDealershipDataList(Cursor c)
+    {
+        ArrayList<Dealership> data = new ArrayList<>(c.getCount());
+
+        if (c.moveToFirst()) {
+            do {
+
+                Dealership d = setDealershipData(c);
+                data.add(d);
+            } while (c.moveToNext());
+        }
+        c.close();
+
+        return data;
     }
 
     public static Dealership setDealershipData(Cursor c)

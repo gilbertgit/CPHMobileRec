@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CPHMobileRec</string>
+    <string name="app_name">CPH Mobile Rec</string>
     <string name="action_settings">Settings</string>
     <string name="admin_password">007007</string>
     <string name="empty_org">(NO ORGANIZATION SELECTED)</string>
@@ -17,6 +17,7 @@
     <string name="intent_dealership_change">com.cphandheld.CPHMobileRec.RESCAN_DEALERSHIP_CHANGE</string>
     <string name="intent_gps_receiver">com.cphandheld.CPHMobileRec.GPS_RECEIVER</string>
     <string name="app_url">http://mobileapi.cphandheld.com/</string>
+    <string name="mint_splunk_api_key">1bba1d7b</string>
 
     <string-array name="entry_type_array">
         <item>New</item>

@@ -314,7 +314,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
     public void GetDealershipsDB() {
 
         Cursor c;
-        if(DBUsers.hasFilteredDealerships(dbHelper))
+        if(DBUsers.hasFilteredDealerships(dbHelper, String.valueOf(Utilities.currentUser.Id)))
             c = DBUsers.getFilteredDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
         else
             c = DBUsers.getDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));

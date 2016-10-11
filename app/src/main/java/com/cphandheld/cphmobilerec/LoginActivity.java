@@ -22,6 +22,7 @@ import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.splunk.mint.Mint;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -468,11 +469,30 @@ public class LoginActivity extends ActionBarActivity {
         protected void onPostExecute(Boolean result) {
 
             if(result) {
+
+                // If we got a good result, clear dealerships for the current user
+                DBUsers.clearDealerships(dbHelper, String.valueOf(Utilities.currentUser.Id));
+
+                // Put dealership result into object array
                 ArrayList<Dealership> array = new Gson().fromJson(dealershipResults.toString(), new TypeToken<List<Dealership>>() {
                 }.getType());
 
+                // Insert new dealerships
                 for (Dealership d : array) {
                     DBUsers.insertDealership(dbHelper, Utilities.currentUser.Id, d.Id, d.Name, d.DealerCode, d.Lot1Name, d.Lot2Name, d.Lot3Name, d.Lot4Name, d.Lot5Name, d.Lot6Name, d.Lot7Name, d.Lot8Name, d.Lot9Name);
+                }
+
+                // Get filtered dealership data
+                Cursor c = DBUsers.getFilteredDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+                ArrayList<Dealership> filteredDealerships = DBUsers.setDealershipDataList(c);
+
+                // Clear any filtered dealerships that are not in our main list
+                for(Dealership dealership : filteredDealerships)
+                {
+                    if(!DBUsers.isDealershipStored(dbHelper, dealership.getDealerCode(), String.valueOf(Utilities.currentUser.Id) ))
+                    {
+                        DBUsers.deleteFilteredDealership(dbHelper, dealership.getDealerCode());
+                    }
                 }
 
                 Intent i = new Intent(LoginActivity.this, MainActivity.class);

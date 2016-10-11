@@ -8,8 +8,8 @@ android {
         applicationId "com.cphandheld.cphmobilerec"
         minSdkVersion 19
         targetSdkVersion 19
-        versionCode 7
-        versionName "0.9.5"
+        versionCode 8
+        versionName "0.9.6"
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
@@ -20,6 +20,12 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+}
+
+repositories {
+    maven {
+        url uri('mint-plugin-repo-5.1.0')
     }
 }
 
@@ -40,4 +46,5 @@ dependencies {
     compile files('src/libs/gson-2.6.2.jar')
     compile files('libs/gson-2.6.2.jar')
     compile files('libs/opencsv-3.7.jar')
+    compile 'com.splunk:mint-android-sdk:5.1.0'
 }

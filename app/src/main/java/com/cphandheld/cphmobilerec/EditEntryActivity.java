@@ -123,7 +123,7 @@ public class EditEntryActivity extends ActionBarActivity {
             String key = e.getKey();
             String value = e.getValue();
 
-            if(key.equals(sentNewUsed))
+            if(value.equals(sentNewUsed))
                 spinnerNewUsed.setSelection(newUsedAdapter.getPosition(key));
         }
 
@@ -222,7 +222,12 @@ public class EditEntryActivity extends ActionBarActivity {
     }
 
     public void GetDealershipsDB() {
-        Cursor c = DBUsers.getDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+        Cursor c;
+        if(DBUsers.hasFilteredDealerships(dbHelper,String.valueOf(Utilities.currentUser.Id)))
+            c = DBUsers.getFilteredDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+        else
+            c = DBUsers.getDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
+
         dealershipList = new ArrayList(c.getCount());
         spinnerDealershipMap.clear();
 

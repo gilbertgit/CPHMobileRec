@@ -140,18 +140,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>PHYSICAL SCAN</font>"));
         actionBar.show();
 
-//        LayoutInflater menuInflater = (LayoutInflater) this
-//                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-//        View v = menuInflater.inflate(R.layout.physical_custom_actionbar, null);
-//        ActionBar actionBar = getSupportActionBar();
-//        actionBar.setDisplayHomeAsUpEnabled(false);
-//        actionBar.setDisplayShowHomeEnabled (false);
-//        actionBar.setDisplayShowCustomEnabled(true);
-//        actionBar.setDisplayShowTitleEnabled(false);
-//        actionBar.setCustomView(v);
-
-        setActionBar();
-
         mProgressDialog = new ProgressDialog(PhysicalActivity.this);
         mProgressDialog.setIndeterminate(false);
         mProgressDialog.setCanceledOnTouchOutside(false);
@@ -178,7 +166,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         headerLayout = (RelativeLayout) findViewById(R.id.testLayout);
 
         spinnerDealership = (Spinner) findViewById(R.id.spinnerDealership);
-        selectedDealership = "0000C";
+        selectedDealership = "";
 
         spinnerNewUsed = (Spinner) findViewById(R.id.spinnerType);
         spinnerLot = (Spinner) findViewById(R.id.spinnerLot);
@@ -519,7 +507,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
     public void GetDealershipsDB() {
 
         Cursor c;
-        if(DBUsers.hasFilteredDealerships(dbHelper))
+        if(DBUsers.hasFilteredDealerships(dbHelper, String.valueOf(Utilities.currentUser.Id)))
             c = DBUsers.getFilteredDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
         else
             c = DBUsers.getDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
@@ -547,7 +535,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                     lotList.add(d.Lot8Name);
                     lotList.add(d.Lot9Name);
 
-                    lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, lotList);
+                    lotAdapter = new ArrayAdapter<>(this, R.layout.generic_list, lotList);
                     lotAdapter.setDropDownViewResource(R.layout.generic_list);
                     spinnerLot.setAdapter(lotAdapter);
 
@@ -575,7 +563,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             spinnerDealership.setAdapter(dealershipAdapter);
 
             if (dealershipSelection == 0)
-                spinnerDealership.setSelection(0);
+                spinnerDealership.setSelection(0, true);
             else {
                 spinnerDealership.setSelection(dealershipSelection, true);
             }
@@ -612,7 +600,6 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                     // reset the lot spinner
                     lotAdapter.notifyDataSetChanged();
                     spinnerLot.setSelection(0);
-                    //spinnerLot.setSelection(lotList.indexOf(lotSelection), true);
                     selectedLot = spinnerLot.getSelectedItem().toString();
                     GetPhysicalDB();
                 }
@@ -623,25 +610,10 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
                 }
             });
-        }
-    }
 
-    private void setActionBar(){
-//        actionBar = getSupportActionBar();
-//        actionBar.setHomeButtonEnabled(false);
-//        actionBar.setDisplayShowHomeEnabled(false);
-//        actionBar.setDisplayUseLogoEnabled(false);
-//        actionBar.setDisplayShowCustomEnabled(true);
-//        actionBar.setDisplayOptions(ActionBar.DISPLAY_SHOW_CUSTOM | ActionBar.DISPLAY_SHOW_HOME);
-//
-//        LayoutInflater linflater = (LayoutInflater) getSystemService(LAYOUT_INFLATER_SERVICE);
-//        View view = linflater.inflate(R.layout.physical_custom_actionbar, null);
-//        ActionBar.LayoutParams lp = new ActionBar.LayoutParams(
-//                ActionBar.LayoutParams.WRAP_CONTENT,
-//                ActionBar.LayoutParams.WRAP_CONTENT);
-//        lp.gravity = Gravity.CENTER_HORIZONTAL | Gravity.CENTER_VERTICAL;
-//        view.setLayoutParams(lp);
-//        getSupportActionBar().setCustomView(view, lp);
+            selectedDealership = spinnerDealershipMap.get(spinnerDealership.getSelectedItem().toString());
+            GetPhysicalDB();
+        }
     }
 
     @Override
@@ -724,14 +696,14 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                     if (data != null && data.length() > 0) {
                         String barcode = Utilities.CheckVinSpecialCases(data);
 
-                        if (barcode.length() != 6 && barcode.length() != 8 && barcode.length() != 17 && barcode.toUpperCase().contains("I,O,Q")) {
+                        if (!Utilities.isValidVin(barcode)) {
                             // alert user that vin is not valid
                             try {
                                 mp = MediaPlayer.create(PhysicalActivity.this, R.raw.error);
                                 mp.setVolume(1, 1);
                                 vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                                long[] pattern = {100, 100, 500};
-                                vib.vibrate(pattern, 0);
+                                long[] pattern = {300, 300, 1000};
+                                vib.vibrate(pattern, -1);
                                 mp.start();
 
                             } catch (Exception e) {

@@ -11,6 +11,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.splunk.mint.Mint;
+
 /**
  * Created by titan on 5/21/16.
  */
@@ -30,7 +32,8 @@ public class MainActivity extends Activity {
 
         ActionBar actionBar = getActionBar();
         actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>CPH Reconciliation</font>"));
-        actionBar.show();
+        //actionBar.show();
+        actionBar.hide();
 
         buttonPhysical = (Button)findViewById(R.id.buttonPhysical);
         buttonRescan = (Button)findViewById(R.id.buttonRescan);
@@ -55,6 +58,7 @@ public class MainActivity extends Activity {
         buttonFilterDealerships.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Mint.leaveBreadcrumb("buttonFilterDealerships-click");
                 Intent i = new Intent(MainActivity.this, FilterDealershipActivity.class);
                 startActivity(i);
             }

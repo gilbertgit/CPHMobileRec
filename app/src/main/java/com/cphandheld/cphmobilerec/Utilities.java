@@ -58,13 +58,15 @@ public class Utilities {
     public static String CheckVinSpecialCases(String vin) {
         String formattedVIN = vin.trim();
 
+        int maxLength = (formattedVIN.length() <= 20) ? formattedVIN.length() : 20;
+        formattedVIN = formattedVIN.substring(0, maxLength);
+
         if (vin.length() > 17) {
             if (vin.substring(0, 1).toUpperCase().equals("I") || vin.substring(0, 1).toUpperCase().equals("A") || vin.substring(0, 1).equals(" ")) // Ford, Mazda, Honda Issues
                 formattedVIN = vin.substring(1, 18);
             else if (vin.length() == 18)
                 formattedVIN = vin.substring(0, 17); // Lexus Issue
 
-            formattedVIN = formattedVIN.substring(0,20);
         }
 
         return formattedVIN;

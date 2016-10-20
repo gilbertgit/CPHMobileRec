@@ -427,6 +427,8 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
                 }
             }
             mProgressDialog.dismiss();
+
+            new ccGetRescan().execute();
         }
 
         private boolean SubmitRescan() {

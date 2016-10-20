@@ -46,6 +46,7 @@ import com.symbol.emdk.EMDKManager.EMDKListener;
 import com.symbol.emdk.EMDKResults;
 import com.symbol.emdk.ProfileManager;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -639,6 +640,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 startActivityForResult(i, 2);
                 break;
             case R.id.action_upload:
+
                 if (Utilities.isNetworkAvailable(getApplicationContext())) {
                     AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
                     builder.setTitle("Upload Physical Inventory?");
@@ -909,11 +911,43 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
     }
 
+    private void DisplayResults(JSONObject data){
+
+        JSONObject responseData;
+        JSONArray uploadResults;
+        String dialogText = "";
+        int totalCount;
+
+        try {
+            responseData = (data);
+            totalCount = responseData.getInt("TotalCount");
+            uploadResults = responseData.getJSONArray("UploadResult");
+
+            for (int i = 0; i < uploadResults.length(); i++) {
+                JSONObject object = uploadResults.getJSONObject(i);
+                dialogText += "<div><b>" + object.getString("Dealership") + " - " + object.getString("DealerCode") + "</b><br>";
+                dialogText += "Inventory Count: " + object.getString("InventoryCount") + "<br>";
+                dialogText += "Bad VIN Count: " + object.getString("BadVinCount") + "</div>";
+
+            }
+
+            AlertDialog alertDialog = new AlertDialog.Builder(PhysicalActivity.this).create();
+            alertDialog.setTitle("Total Inventory Uploaded: " + totalCount);
+            alertDialog.setMessage(Html.fromHtml(dialogText));
+            alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            alertDialog.show();
+
+        }catch(JSONException ex){}
+    }
+
     private class UploadTask extends AsyncTask<String, Void, Boolean> {
 
-        int inventoryCount;
-        int duplicateCount;
-        int badVinCount;
+        JSONObject responseData = new JSONObject();
 
         @Override
         protected void onPreExecute() {
@@ -943,7 +977,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
         @Override
         protected void onPostExecute(Boolean result) {
-
+            
             if (result) {
 
                 dbHelper.ExportDB(getApplicationContext());
@@ -954,19 +988,8 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
                 mProgressDialog.dismiss();
 
-                AlertDialog alertDialog = new AlertDialog.Builder(PhysicalActivity.this).create();
-                alertDialog.setTitle("Upload Results");
-                String alert1 = "Inventory count: " + inventoryCount;
-                String alert2 = "Duplicate count: " + duplicateCount;
-                String alert3 = "Bad VIN count: " + badVinCount;
-                alertDialog.setMessage(alert1 + "\n" + alert2 + "\n" + alert3);
-                alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL, "OK",
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        });
-                alertDialog.show();
+                DisplayResults(responseData);
+
             } else {
                 mProgressDialog.dismiss();
             }
@@ -977,7 +1000,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             HttpURLConnection connection;
             OutputStreamWriter request;
             InputStreamReader isr;
-            JSONObject responseData;
+
             String result;
 
             try {
@@ -1008,9 +1031,9 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                         isr = new InputStreamReader(connection.getInputStream());
                         result = Utilities.StreamToString(isr);
                         responseData = new JSONObject(result);
-                        inventoryCount = responseData.getInt("InventoryCount");
-                        duplicateCount = responseData.getInt("DuplicateCount");
-                        badVinCount = responseData.getInt("BadVinCount");
+                        //inventoryCount = responseData.getInt("InventoryCount");
+                        //duplicateCount = responseData.getInt("DuplicateCount");
+                        //badVinCount = responseData.getInt("BadVinCount");
                         return true;
                     } else {
                         isr = new InputStreamReader(connection.getErrorStream());

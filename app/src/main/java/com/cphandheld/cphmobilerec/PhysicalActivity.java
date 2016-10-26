@@ -977,7 +977,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
         @Override
         protected void onPostExecute(Boolean result) {
-            
+
             if (result) {
 
                 dbHelper.ExportDB(getApplicationContext());

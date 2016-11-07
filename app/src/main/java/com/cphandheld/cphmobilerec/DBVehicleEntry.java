@@ -1,10 +1,19 @@
 package com.cphandheld.cphmobilerec;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
+import android.util.Log;
 
+import com.opencsv.CSVWriter;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created by titan on 4/10/16.
@@ -193,5 +202,40 @@ public class DBVehicleEntry {
         c.close();
 
         return  physical;
+    }
+
+    public static void BackupPhysicalDB(DBHelper dbh, Context context, String userId) {
+
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
+        String formattedDate = df.format(c.getTime());
+        SQLiteDatabase db = dbh.getWritableDatabase();
+
+        File dbFile =  context.getDatabasePath(DBHelper.DATABASE_NAME);
+        File exportDir = new File(Environment.getExternalStorageDirectory()+"/cphmobile/", "");
+        if (!exportDir.exists()) {
+            exportDir.mkdirs();
+        }
+
+        File file = new File(exportDir, "REC-" + formattedDate +".csv");
+        try {
+            file.createNewFile();
+            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+
+            Cursor curCSV = db.rawQuery("SELECT * FROM " + VEHICLE_ENTRY_TABLE_NAME + " where userId = ?" , new String[] {userId} );
+            csvWrite.writeNext(curCSV.getColumnNames());
+            while (curCSV.moveToNext()) {
+                //Which column you want to export
+                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
+                        curCSV.getString(3), curCSV.getString(4), curCSV.getString(5),
+                        curCSV.getString(6), curCSV.getString(7), curCSV.getString(8),
+                        curCSV.getString(9), curCSV.getString(10), curCSV.getString(11)};
+                csvWrite.writeNext(arrStr);
+            }
+            csvWrite.close();
+            curCSV.close();
+        } catch (Exception sqlEx) {
+            Log.e("ExportData", sqlEx.getMessage(), sqlEx);
+        }
     }
 }

@@ -41,6 +41,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.splunk.mint.Mint;
+import com.splunk.mint.MintLogLevel;
 import com.symbol.emdk.EMDKManager;
 import com.symbol.emdk.EMDKManager.EMDKListener;
 import com.symbol.emdk.EMDKResults;
@@ -640,34 +642,8 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 startActivityForResult(i, 2);
                 break;
             case R.id.action_upload:
-
-                if (Utilities.isNetworkAvailable(getApplicationContext())) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
-                    builder.setTitle("Upload Physical Inventory?");
-                    builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            new UploadTask().execute();
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            //TODO
-                            dialog.dismiss();
-                        }
-                    });
-                    builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                        @Override
-                        public void onDismiss(DialogInterface dialog) {
-
-                        }
-                    });
-                    AlertDialog dialog = builder.create();
-                    dialog.show();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Please check your internet connection.", Toast.LENGTH_LONG).show();
-                }
-
+                // Check internet connection then upload
+                new ccUploadTask().execute();
                 break;
         }
 
@@ -942,7 +918,57 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                     });
             alertDialog.show();
 
+//            HashMap<String, Object> myData = new HashMap<String, Object>();
+//            myData.put("User", Utilities.currentUser.Id);
+//            myData.put("Scanner SN", Utilities.scannerSN);
+//            myData.put("SIM", Utilities.simNumber);
+//            myData.put("Phone", Utilities.phoneNumber);
+//            myData.put("Version", Utilities.softwareVersion);
+//            myData.put("Upload Date", Utilities.getSimpleDateTime());
+//            myData.put("Total Count", totalCount);
+//            Mint.logEvent("Upload Complete", MintLogLevel.Info, myData);
+
         }catch(JSONException ex){}
+    }
+
+    private class ccUploadTask extends AsyncTask<String, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            return Utilities.hasInternetAccess(PhysicalActivity.this);
+        }
+        @Override
+        protected void onPostExecute(Boolean result) {
+            if (result) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
+                builder.setTitle("Upload Physical Inventory?");
+                builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        new UploadTask().execute();
+                        dialog.dismiss();
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        //TODO
+                        dialog.dismiss();
+                    }
+                });
+                builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+
+                    }
+                });
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+            else
+            {
+                Toast.makeText(getApplicationContext(), "Please check your internet connection.", Toast.LENGTH_LONG).show();
+            }
+        }
+
     }
 
     private class UploadTask extends AsyncTask<String, Void, Boolean> {
@@ -957,7 +983,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
             ArrayList physical = DBVehicleEntry.GetPhysicalForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
 
             if (!physical.equals(null) && physical.size() != 0) {
-                inventoryData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"ScannerSerialNumber\":\"" + Utilities.androidId + "\",\"Inventory\":[";
+                inventoryData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"ScannerSerialNumber\":\"" + Utilities.scannerSN + "\",\"Inventory\":[";
                 for (int i = 0; i < physical.size(); i++) {
                     String json = gson.toJson(physical.get(i));
                     inventoryData += json;
@@ -980,7 +1006,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
 
             if (result) {
 
-                dbHelper.ExportDB(getApplicationContext());
+                DBVehicleEntry.BackupPhysicalDB(dbHelper, getApplicationContext(), String.valueOf(Utilities.currentUser.Id));
                 DBVehicleEntry.clearPhysicalTableByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
                 phys.clear();
                 listAdapter.notifyDataSetChanged();

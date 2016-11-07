@@ -387,7 +387,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
             rescan = DBRescan.getRescanForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
 
             if (!rescan.equals(null) && rescan.size() != 0) {
-                rescanData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"ScannerSerialNumber\":\"" + Utilities.androidId + "\",\"Rescans\":[";
+                rescanData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"ScannerSerialNumber\":\"" + Utilities.scannerSN + "\",\"Rescans\":[";
                 for (int i = 0; i < rescan.size(); i++) {
                     String json = gson.toJson(rescan.get(i));
                     rescanData += json;
@@ -409,7 +409,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
             if(result)
             {
-                if(dbHelper.BackupRescanDB(dbHelper, getApplicationContext(), String.valueOf(Utilities.currentUser.Id)))
+                if(DBRescan.BackupRescanDB(dbHelper, getApplicationContext(), String.valueOf(Utilities.currentUser.Id)))
                 {
                     // Remove the rescan that we uploaded
                     for (int i = 0; i < rescan.size(); i++) {
@@ -553,7 +553,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
 
             try {
                 dealercodes = URLEncoder.encode(dealercodes, "utf-8");
-                String address = Utilities.AppURL + Utilities.RescanDownloadURL + Utilities.androidId + "/" + dealercodes;
+                String address = Utilities.AppURL + Utilities.RescanDownloadURL + Utilities.scannerSN + "/" + dealercodes;
                 url = new URL(address);
 
                 connection = (HttpURLConnection) url.openConnection();

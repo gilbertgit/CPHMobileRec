@@ -45,6 +45,7 @@ public class EditEntryActivity extends ActionBarActivity {
     int sentDealershipIndex;
     int sentDealerPos;
     int selectionCounter = 0;
+    boolean firstLoad = true;
 
     DBHelper dbHelper;
 
@@ -276,13 +277,16 @@ public class EditEntryActivity extends ActionBarActivity {
                 public void onItemSelected(AdapterView<?> arg0, View arg1,
                                            int arg2, long arg3) {
 
-                    selectionCounter = selectionCounter++;
-                    if(selectionCounter <= 2)
+                    // Android is firing this off when the activity loads.. Not sure why so ignore first event
+                    if(firstLoad)
+                    {
+                        firstLoad = false;
                         return;
+                    }
 
                     sentDealership = spinnerDealershipMap.get(spinnerDealership.getSelectedItem().toString());
-                    Log.v(TAG, "Dealership Selected: " +sentDealership);
-                    //lotList = new ArrayList<String>(9);
+                    Log.v(TAG, "Dealership Selected: " + sentDealership);
+
                     lotList.clear();
                     if (!dealershipAdapter.getItem(arg2).Lot1Name.equals(""))
                         lotList.add(dealershipAdapter.getItem(arg2).Lot1Name);

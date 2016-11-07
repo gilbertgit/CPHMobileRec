@@ -1,10 +1,19 @@
 package com.cphandheld.cphmobilerec;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
+import android.util.Log;
 
+import com.opencsv.CSVWriter;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created by titan on 5/31/16.
@@ -223,5 +232,40 @@ public class DBRescan {
 
         return rescan;
 
+    }
+
+    public static boolean BackupRescanDB(DBHelper dbh, Context context, String user) {
+
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
+        String formattedDate = df.format(c.getTime());
+        SQLiteDatabase db = dbh.getReadableDatabase();
+
+        File dbFile =  context.getDatabasePath(DBHelper.DATABASE_NAME);
+        File exportDir = new File(Environment.getExternalStorageDirectory()+"/cphmobile/", "");
+        if (!exportDir.exists()) {
+            exportDir.mkdirs();
+        }
+
+        File file = new File(exportDir, "RESCAN" + formattedDate +".csv");
+        try {
+            file.createNewFile();
+            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+
+            Cursor curCSV = db.rawQuery("SELECT * FROM " + RESCAN_TABLE_NAME + " WHERE userid = ?", new String[]{user});
+            csvWrite.writeNext(curCSV.getColumnNames());
+            while (curCSV.moveToNext()) {
+                //Which column you want to export
+                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
+                csvWrite.writeNext(arrStr);
+            }
+            csvWrite.close();
+            curCSV.close();
+            return true;
+        } catch (Exception sqlEx) {
+            Log.e("ExportData", sqlEx.getMessage(), sqlEx);
+        }
+
+        return false;
     }
 }

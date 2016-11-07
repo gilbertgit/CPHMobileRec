@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.support.v7.app.ActionBarActivity;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -31,6 +32,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -58,7 +60,6 @@ public class LoginActivity extends ActionBarActivity {
     ImageView imageEntry6;
     ImageView imageBack;
     ImageView imageLogo;
-    TextView textOrgName;
     TextView textVersion;
 
     ProgressDialog mProgressDialog;
@@ -71,16 +72,11 @@ public class LoginActivity extends ActionBarActivity {
     DBHelper dbHelper;
     JSONArray dealershipResults;
     SharedPreferences.Editor editor;
-    private String android_id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-        android_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-        Utilities.androidId = android_id;
 
         dbHelper = new DBHelper(LoginActivity.this);
         dbHelper.getWritableDatabase();
@@ -91,17 +87,34 @@ public class LoginActivity extends ActionBarActivity {
         organizationId = settings.getInt("orgId", -1);
         organizationName = settings.getString("orgName", "");
         Utilities.AppURL = settings.getString("appURL", "");
-        editor.putString("androidId", android_id);
+
+        // Get Scanner info
+        Utilities.scannerSN = settings.getString("scannerSN", "");
+        if(Utilities.scannerSN.equals(""))
+        {
+            try {
+                Class<?> c = Class.forName("android.os.SystemProperties");
+                Method get = c.getMethod("get", String.class, String.class );
+                Utilities.scannerSN = (String)(   get.invoke(c, "ro.serialno", "unknown" )  );
+                editor.putString("scannerSN", Utilities.scannerSN);
+            }
+            catch (Exception ignored)
+            {
+            }
+        }
+
+        // Get SIM info
+        TelephonyManager telemamanger = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        Utilities.simNumber = telemamanger.getSimSerialNumber();
+        Utilities.phoneNumber = telemamanger.getLine1Number();
+        editor.putString("simNumber", Utilities.simNumber);
+        editor.putString("phoneNumber", Utilities.phoneNumber);
         editor.commit();
 
         String versionName = com.cphandheld.cphmobilerec.BuildConfig.VERSION_NAME;
+        Utilities.softwareVersion = versionName;
         textVersion = (TextView) findViewById(R.id.textVersion);
         textVersion.setText(versionName);
-
-//        if (!organizationName.equals("")) {
-//            textOrgName = (TextView) findViewById(R.id.textOrgName);
-//            textOrgName.setText(organizationName.toUpperCase());
-//        }
 
         imageEntry1 = (ImageView) findViewById(R.id.entry1);
         imageEntry2 = (ImageView) findViewById(R.id.entry2);

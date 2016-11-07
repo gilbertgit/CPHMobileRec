@@ -47,7 +47,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public DBHelper(Context context)
     {
-        super(context, DATABASE_NAME, null, 1);
+        super(context, DATABASE_NAME, null, 2);
         this.dbHelper = this;
         this.sqdb = dbHelper.getWritableDatabase();
     }
@@ -132,74 +132,6 @@ public class DBHelper extends SQLiteOpenHelper {
         }
         sqdb.setTransactionSuccessful();
         sqdb.endTransaction();
-    }
-
-    public void ExportDB(Context context) {
-
-        Calendar c = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
-        String formattedDate = df.format(c.getTime());
-
-        File dbFile =  context.getDatabasePath(DATABASE_NAME);
-        File exportDir = new File(Environment.getExternalStorageDirectory()+"/cphmobile/", "");
-        if (!exportDir.exists()) {
-            exportDir.mkdirs();
-        }
-
-        File file = new File(exportDir, "REC-" + formattedDate +".csv");
-        try {
-            file.createNewFile();
-            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
-            dbHelper.getReadableDatabase();
-            Cursor curCSV = sqdb.rawQuery("SELECT * FROM " + VEHICLE_ENTRY_TABLE_NAME, null);
-            csvWrite.writeNext(curCSV.getColumnNames());
-            while (curCSV.moveToNext()) {
-                //Which column you want to export
-                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
-                        curCSV.getString(3), curCSV.getString(4), curCSV.getString(5),
-                        curCSV.getString(6), curCSV.getString(7), curCSV.getString(8),
-                        curCSV.getString(9), curCSV.getString(10), curCSV.getString(11)};
-                csvWrite.writeNext(arrStr);
-            }
-            csvWrite.close();
-            curCSV.close();
-        } catch (Exception sqlEx) {
-            Log.e("ExportData", sqlEx.getMessage(), sqlEx);
-        }
-    }
-
-    public boolean BackupRescanDB(DBHelper dbh, Context context, String user) {
-
-        Calendar c = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
-        String formattedDate = df.format(c.getTime());
-
-        File dbFile =  context.getDatabasePath(DATABASE_NAME);
-        File exportDir = new File(Environment.getExternalStorageDirectory()+"/cphmobile/", "");
-        if (!exportDir.exists()) {
-            exportDir.mkdirs();
-        }
-
-        File file = new File(exportDir, "RESCAN" + formattedDate +".csv");
-        try {
-            file.createNewFile();
-            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
-            SQLiteDatabase db = dbh.getReadableDatabase();
-            Cursor curCSV = db.rawQuery("SELECT * FROM " + RESCAN_TABLE_NAME + " WHERE userid = ?", new String[]{user});
-            csvWrite.writeNext(curCSV.getColumnNames());
-            while (curCSV.moveToNext()) {
-                //Which column you want to export
-                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
-                csvWrite.writeNext(arrStr);
-            }
-            csvWrite.close();
-            curCSV.close();
-            return true;
-        } catch (Exception sqlEx) {
-            Log.e("ExportData", sqlEx.getMessage(), sqlEx);
-        }
-
-        return false;
     }
 
 }

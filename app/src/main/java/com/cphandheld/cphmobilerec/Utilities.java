@@ -39,8 +39,11 @@ public class Utilities {
     public static List<Dealership> dealerships;
     public static User currentUser = new User();
     public static HashMap<String, String> keyCodeMap;
-    public static String androidId = "";
+    public static String scannerSN = "";
     public static String currentDealership = "";
+    public static String simNumber = "";
+    public static String phoneNumber = "";
+    public static String softwareVersion = "";
 
     public static String StreamToString(InputStreamReader isr) throws IOException
     {
@@ -208,5 +211,16 @@ public class Utilities {
 
     public static boolean isValidVin(String vin) {
         return isValidVinLength(vin) && hasValidVinCharacters(vin);
+    }
+
+    public static String getSimpleDateTime()
+    {
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("MM/dd/yy ");
+        SimpleDateFormat tf = new SimpleDateFormat("");
+        String formattedDate = df.format(c.getTime());
+        String formattedTime = tf.format(c.getTime());
+
+        return formattedDate + formattedTime;
     }
 }

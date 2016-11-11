@@ -235,11 +235,12 @@ public class ManualEntryActivity extends ActionBarActivity {
             if( focusCurrent==null || focusCurrent.getClass()!=EditText.class ) return;
             EditText edittext = (EditText) focusCurrent;
             Editable editable = edittext.getText();
+            int cursor = edittext.getSelectionEnd();
 
             String c = Utilities.keyCodeMap.get(String.valueOf(primaryCode));
             if(!(c == null)){
                 if(c != "Q" && c != "I" && c != "O") {
-                    editable.append(c);
+                    editable.insert(cursor, c);
                     Utilities.PlayClick(getApplicationContext());
                 }
                 else
@@ -248,9 +249,9 @@ public class ManualEntryActivity extends ActionBarActivity {
             else{
                 switch(primaryCode){
                     case -5:
-                        int length = edittext.getText().length();
-                        if (length > 0) {
-                            edittext.getText().delete(length - 1, length);
+
+                        if (cursor > 0) {
+                            edittext.getText().delete(cursor - 1, cursor);
                             Utilities.PlayClick(getApplicationContext());
                         }
                 }

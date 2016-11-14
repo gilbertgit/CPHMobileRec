@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="fill_horizontal"
+    android:background="@color/colorHeader"
+    >
+
+    <ImageButton
+        android:id="@+id/btnManualEntry"
+        android:background="?attr/actionBarItemBackground"
+        android:layout_width="?attr/actionBarSize"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside"
+        android:layout_alignParentLeft="true"
+        android:clickable="true"
+        android:src="@drawable/ic_add_white_24dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:textSize="18dp"
+        android:textColor="#FFF"
+        android:text="PHYSICAL SCAN"/>
+
+    <ImageButton
+        android:id="@+id/btnUpload"
+        android:background="?attr/actionBarItemBackground"
+        android:layout_width="?attr/actionBarSize"
+        android:layout_height="match_parent"
+        android:scaleType="centerInside"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/ic_file_upload_white_24dp" />
+
+</RelativeLayout>

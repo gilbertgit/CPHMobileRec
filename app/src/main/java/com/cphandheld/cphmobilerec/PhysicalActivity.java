@@ -1,6 +1,7 @@
 package com.cphandheld.cphmobilerec;
 
 import android.app.ActionBar;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -17,7 +18,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBarActivity;
+//import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
 import android.util.Log;
 import android.view.Gravity;
@@ -34,6 +35,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.Spinner;
@@ -67,7 +69,7 @@ import java.util.List;
 /**
  * Created by titan on 4/8/16.
  */
-public class PhysicalActivity extends ActionBarActivity implements EMDKListener, AbsListView.OnScrollListener {
+public class PhysicalActivity extends Activity implements EMDKListener, AbsListView.OnScrollListener {
 
     private String TAG = "PhysicalActivity";
 
@@ -139,9 +141,7 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_physical);
 
-        ActionBar actionBar = getActionBar();
-        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>PHYSICAL SCAN</font>"));
-        actionBar.show();
+        showActionBar();
 
         mProgressDialog = new ProgressDialog(PhysicalActivity.this);
         mProgressDialog.setIndeterminate(false);
@@ -619,20 +619,21 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_physical, menu);
-        return true;
-    }
+    private void showActionBar() {
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+        ActionBar actionBar = getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(false);
+        actionBar.setDisplayShowHomeEnabled (false);
+        actionBar.setDisplayShowCustomEnabled(true);
+        actionBar.setDisplayShowTitleEnabled(false);
+        actionBar.setCustomView(R.layout.physical_header_bar);
+        //actionBar.setCustomView(v);
 
-        Log.v(TAG, "onOptionsItemSelected");
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.action_manual:
+        ImageButton btnManualEntry = (ImageButton) findViewById(R.id.btnManualEntry);
+        btnManualEntry.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.v(TAG, "onOptionsItemSelected - ManualEntry");
                 Intent i = new Intent(PhysicalActivity.this, ManualEntryActivity.class);
                 i.putExtra("extraAppType", "PHYSICAL");
                 i.putExtra("extraDealership", selectedDealership);
@@ -640,14 +641,17 @@ public class PhysicalActivity extends ActionBarActivity implements EMDKListener,
                 i.putExtra("extraLot", selectedLot);
                 i.putExtra("extraNewUsed", selectedValueNewUsed);
                 startActivityForResult(i, 2);
-                break;
-            case R.id.action_upload:
-                // Check internet connection then upload
-                new ccUploadTask().execute();
-                break;
-        }
+            }
+        });
 
-        return super.onOptionsItemSelected(item);
+        ImageButton btnUpload = (ImageButton) findViewById(R.id.btnUpload);
+        btnUpload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.v(TAG, "onOptionsItemSelected - Upload Physical");
+                new ccUploadTask().execute();
+            }
+        });
     }
 
     @Override

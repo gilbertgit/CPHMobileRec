@@ -2,9 +2,11 @@ package com.cphandheld.cphmobilerec;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.opencsv.CSVWriter;
@@ -118,12 +120,17 @@ public class DBVehicleEntry {
         }
     }
 
-    public static Cursor getPhysicalByDealership(DBHelper dbh, String dealership){
+    public static Cursor getPhysicalByDealership(Context c, DBHelper dbh, String dealership){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
+        boolean sort = prefs.getBoolean(SettingsActivity.KEY_PREF_SORTBY_LASTUPDATE, false);
         SQLiteDatabase db = dbh.getReadableDatabase();
-//        Cursor res =  db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by id DESC" , new String[] {dealership});
 
-        Cursor res =  db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by id DESC" , new String[] {dealership});
-        return res;
+        Cursor cursor;
+        if(sort)
+            cursor = db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by id DESC" , new String[] {dealership});
+        else
+            cursor = db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by date DESC, time DESC" , new String[] {dealership});
+        return cursor;
     }
 
     public static Cursor getPhysicalByUser(DBHelper dbh, String user){

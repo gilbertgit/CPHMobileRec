@@ -118,6 +118,13 @@
             android:theme="@style/MyCustomTheme">
         </activity>
 
+        <activity
+            android:name=".SettingsActivity"
+            android:label="Settings"
+            android:screenOrientation="portrait"
+            android:theme="@style/MyCustomTheme">
+        </activity>
+
     </application>
 
 </manifest>

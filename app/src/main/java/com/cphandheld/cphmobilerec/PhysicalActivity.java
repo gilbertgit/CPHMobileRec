@@ -738,7 +738,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
         listAdapter = new PhysicalListAdapter(PhysicalActivity.this, 0, phys, mClickListener, mLongClickListener);
         vehicleList.setAdapter(listAdapter);
 
-        Cursor c = DBVehicleEntry.getPhysicalByDealership(dbHelper, selectedDealership);
+        Cursor c = DBVehicleEntry.getPhysicalByDealership(PhysicalActivity.this, dbHelper, selectedDealership);
 
         if (c.moveToFirst()) {
             do {
@@ -938,7 +938,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
             ArrayList physical = DBVehicleEntry.GetPhysicalForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
 
             if (!physical.equals(null) && physical.size() != 0) {
-                inventoryData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"ScannerSerialNumber\":\"" + Utilities.scannerSN + "\",\"Inventory\":[";
+                inventoryData += "{\"ScannerUserId\":\"" + Utilities.currentUser.Id + "\",\"SoftwareVersion\":\"" + Utilities.softwareVersion + "\",\"ScannerSerialNumber\":\"" + Utilities.scannerSN + "\",\"Inventory\":[";
                 for (int i = 0; i < physical.size(); i++) {
                     String json = gson.toJson(physical.get(i));
                     inventoryData += json;

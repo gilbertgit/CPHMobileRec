@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     private Button buttonPhysical;
     private Button buttonRescan;
     private Button buttonFilterDealerships;
+    private Button buttonSettings;
 
 
     @Override
@@ -32,12 +33,12 @@ public class MainActivity extends Activity {
 
         ActionBar actionBar = getActionBar();
         actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>CPH Reconciliation</font>"));
-        //actionBar.show();
         actionBar.hide();
 
         buttonPhysical = (Button)findViewById(R.id.buttonPhysical);
         buttonRescan = (Button)findViewById(R.id.buttonRescan);
         buttonFilterDealerships = (Button)(findViewById(R.id.buttonFilterDealerships));
+        buttonSettings = (Button)findViewById(R.id.buttonSettings);
 
         buttonPhysical.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,6 +61,15 @@ public class MainActivity extends Activity {
             public void onClick(View v) {
                 Mint.leaveBreadcrumb("buttonFilterDealerships-click");
                 Intent i = new Intent(MainActivity.this, FilterDealershipActivity.class);
+                startActivity(i);
+            }
+        });
+
+        buttonSettings.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Mint.leaveBreadcrumb("buttonSettings-click");
+                Intent i = new Intent(MainActivity.this, SettingsActivity.class);
                 startActivity(i);
             }
         });

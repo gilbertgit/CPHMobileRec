@@ -2,8 +2,10 @@ package com.cphandheld.cphmobilerec;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Vibrator;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -20,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 /**
  * Created by titan on 4/7/16.
@@ -202,9 +205,13 @@ public class Utilities {
     }
 
     public static boolean hasValidVinCharacters(String vin) {
-        boolean result = false;
-        if(!vin.toUpperCase().contains("I,O,Q"))
-            result = true;
+        boolean result = true;
+
+        Pattern p = Pattern.compile("[^a-zA-Z0-9]");
+        boolean hasSpecialChar = p.matcher(vin).find();
+
+        if(vin.toUpperCase().contains("I,O,Q") || hasSpecialChar)
+            result = false;
 
         return result;
     }
@@ -222,5 +229,20 @@ public class Utilities {
         String formattedTime = tf.format(c.getTime());
 
         return formattedDate + formattedTime;
+    }
+
+    public static void playError(Context c)
+    {
+        try {
+            MediaPlayer mp = MediaPlayer.create(c, R.raw.error);
+            mp.setVolume(1, 1);
+            Vibrator vib = (Vibrator) c.getSystemService(Context.VIBRATOR_SERVICE);
+            long[] pattern = {300, 300, 1000};
+            vib.vibrate(pattern, -1);
+            mp.start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

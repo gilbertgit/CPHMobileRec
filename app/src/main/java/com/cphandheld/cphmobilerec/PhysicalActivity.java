@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.location.Location;
 import android.media.MediaPlayer;
@@ -21,9 +22,12 @@ import android.support.v4.content.LocalBroadcastManager;
 //import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
 import android.util.Log;
+import android.util.SparseBooleanArray;
+import android.view.ActionMode;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -134,14 +138,16 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
     private String latitude;
     private String longitude;
 
-    ActionBar actionBar;
+    private ActionMode mActionMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_physical);
 
-        showActionBar();
+        ActionBar actionBar = getActionBar();
+        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>PHYSICAL SCAN</font>"));
+        actionBar.show();
 
         mProgressDialog = new ProgressDialog(PhysicalActivity.this);
         mProgressDialog.setIndeterminate(false);
@@ -163,7 +169,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
         mBackgroundContainer = (BackgroundContainer) findViewById(R.id.listViewBackground);
 
         phys = new ArrayList();
-        listAdapter = new PhysicalListAdapter(PhysicalActivity.this, 0, phys, mTouchListener);
+        listAdapter = new PhysicalListAdapter(PhysicalActivity.this, 0, phys, mClickListener, mLongClickListener);
         vehicleList.setAdapter(listAdapter);
 
         headerLayout = (RelativeLayout) findViewById(R.id.testLayout);
@@ -276,247 +282,230 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
     }
 
     @Override
-    protected void onDestroy()
-    {
+    protected void onDestroy() {
         Log.v(TAG, "onDestroy");
 
         gpsHelper.stopUsingGPS();
 
         stopService(gpsServiceIntent);
 
-        if(emdkManager != null)
+        if (emdkManager != null)
             this.emdkManager.release();
 
         super.onDestroy();
     }
 
-    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
-        float mDownX;
-        private int mSwipeSlop = -1;
-
+    private View.OnClickListener mClickListener = new View.OnClickListener() {
         @Override
-        public boolean onTouch(final View v, MotionEvent event) {
-            if (mSwipeSlop < 0) {
-                mSwipeSlop = ViewConfiguration.get(PhysicalActivity.this).
-                        getScaledTouchSlop();
-            }
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    if (mItemPressed) {
-                        // Multi-item swipes not handled
-                        return false;
-                    }
-                    mItemPressed = true;
-                    mDownX = event.getX();
-                    break;
-                case MotionEvent.ACTION_CANCEL:
-                    v.setAlpha(1);
-                    v.setTranslationX(0);
-                    mItemPressed = false;
-                    break;
-                case MotionEvent.ACTION_MOVE: {
-                    float x = event.getX() + v.getTranslationX();
-                    float deltaX = x - mDownX;
-                    float deltaXAbs = Math.abs(deltaX);
-                    if (!mSwiping) {
-                        if (deltaXAbs > mSwipeSlop) {
-                            mSwiping = true;
-                            vehicleList.requestDisallowInterceptTouchEvent(true);
-                            mBackgroundContainer.showBackground(v.getTop(), v.getHeight());
-                        }
-                    }
-                    if (mSwiping) {
-                        v.setTranslationX((x - mDownX));
-                        v.setAlpha(1 - deltaXAbs / v.getWidth());
-                    }
-                }
-                break;
-                case MotionEvent.ACTION_UP: {
-                    // User let go - figure out whether to animate the view out, or back into place
-                    if (mSwiping) {
-                        float x = event.getX() + v.getTranslationX();
-                        float deltaX = x - mDownX;
-                        float deltaXAbs = Math.abs(deltaX);
-                        float fractionCovered;
-                        float endX;
-                        float endAlpha;
-                        final boolean remove;
-                        if (deltaXAbs > v.getWidth() / 4) {
-                            // Greater than a quarter of the width - animate it out
-                            fractionCovered = deltaXAbs / v.getWidth();
-                            endX = deltaX < 0 ? -v.getWidth() : v.getWidth();
-                            endAlpha = 0;
-                            remove = true;
-                        } else {
-                            // Not far enough - animate it back
-                            fractionCovered = 1 - (deltaXAbs / v.getWidth());
-                            endX = 0;
-                            endAlpha = 1;
-                            remove = false;
-                        }
-                        // Animate position and alpha of swiped item
-                        // NOTE: This is a simplified version of swipe behavior, for the
-                        // purposes of this demo about animation. A real version should use
-                        // velocity (via the VelocityTracker class) to send the item off or
-                        // back at an appropriate speed.
-                        long duration = (int) ((1 - fractionCovered) * SWIPE_DURATION);
-                        vehicleList.setEnabled(false);
-                        v.animate().setDuration(duration).
-                                alpha(endAlpha).translationX(endX).
-                                withEndAction(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        // Restore animated values
-                                        v.setAlpha(1);
-                                        v.setTranslationX(0);
-                                        if (remove) {
-                                            animateRemoval(vehicleList, v);
-                                        } else {
-                                            mBackgroundContainer.hideBackground();
-                                            mSwiping = false;
-                                            vehicleList.setEnabled(true);
-                                        }
-                                    }
-                                });
-                    } else {
-                        Utilities.PlayClick(getApplicationContext());
-                        int position = vehicleList.getPositionForView(v);
+        public void onClick(View v) {
+            int position = vehicleList.getPositionForView(v);
 
-                        Intent i = new Intent(PhysicalActivity.this, EditEntryActivity.class);
-                        i.putExtra("extraDealership", listAdapter.getItem(position - 1).getDealership());
-                        i.putExtra("extraLot", listAdapter.getItem(position - 1).getLot());
-                        i.putExtra("extraNewUsed", listAdapter.getItem(position - 1).getNewUsed());
-                        i.putExtra("extraVin", listAdapter.getItem(position - 1).getVIN());
-                        i.putExtra("extraEntryType", listAdapter.getItem(position - 1).getEntryType());
-                        i.putExtra("extraNotes", listAdapter.getItem(position - 1).getNotes());
-                        i.putExtra("extraLotIndex", selectedLot);
-                        i.putExtra("extraNewUsedIndex", selectedValueNewUsed);
-                        i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
-                        //i.putExtra("extraDealerPos",  position-1);
-                        startActivityForResult(i, 2);
-                    }
-                }
-                mItemPressed = false;
-                break;
-                default:
-                    return false;
+            // if we have nothing selected, perform click and go to Edit Entry Activity
+            if(mActionMode == null) {
+
+                ArrayList<String> selectedItems = new ArrayList<String>();
+                selectedItems.add(listAdapter.getItem(position - 1).getVIN());
+                Intent i = new Intent(PhysicalActivity.this, EditEntryActivity.class);;
+
+                i.putExtra("extraSelectedItems", selectedItems);
+                i.putExtra("extraLotIndex", selectedLot);
+                i.putExtra("extraNewUsedIndex", selectedValueNewUsed);
+                i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
+                startActivityForResult(i, 2);
             }
+            else
+            {
+                // else add item clicked to selected list list
+                onListItemSelect(position -1);
+            }
+        }
+    };
+
+
+    private View.OnLongClickListener mLongClickListener = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+
+            int position = vehicleList.getPositionForView(v);
+            vehicleList.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+
+            onListItemSelect(position -1);
             return true;
         }
     };
 
-    /**
-     * This method animates all other views in the ListView container (not including ignoreView)
-     * into their final positions. It is called after ignoreView has been removed from the
-     * adapter, but before layout has been run. The approach here is to figure out where
-     * everything is now, then allow layout to run, then figure out where everything is after
-     * layout, and then to run animations between all of those start/end positions.
-     */
-    private void animateRemoval(final ListView listview, View viewToRemove) {
-        mViewToRemove = viewToRemove;
-        int firstVisiblePosition = listview.getFirstVisiblePosition();
-        for (int i = 0; i < listview.getChildCount(); ++i) {
-            View child = listview.getChildAt(i);
-            if (child != viewToRemove) {
-                int position = firstVisiblePosition + i;
-                long itemId = listAdapter.getItemId(position);
-                mItemIdTopMap.put(itemId, child.getTop());
-            }
+    private void onListItemSelect(int position) {
+        listAdapter.toggleSelection(position);
+        boolean hasCheckedItems = listAdapter.getSelectedCount() > 0;
+
+        if (hasCheckedItems && mActionMode == null)
+            // there are some selected items, start the actionMode
+            mActionMode = startActionMode(new ActionModeCallback());
+        else if (!hasCheckedItems && mActionMode != null)
+            // there no selected items, finish the actionMode
+            mActionMode.finish();
+
+        if (mActionMode != null)
+            mActionMode.setTitle(String.valueOf(listAdapter
+                    .getSelectedCount()) + " selected");
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_physical, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId())
+        {
+            case R.id.action_upload:
+                new ccUploadTask().execute();
+                break;
+            case R.id.action_manual:
+
+                if(selectedDealership.equals("-1"))
+                {
+                    Toast.makeText(PhysicalActivity.this, "Please selected a dealership", Toast.LENGTH_LONG).show();
+                    Utilities.playError(PhysicalActivity.this);
+                    break;
+                }
+
+                Intent i = new Intent(PhysicalActivity.this, ManualEntryActivity.class);
+                i.putExtra("extraAppType", "PHYSICAL");
+                i.putExtra("extraDealership", selectedDealership);
+                i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
+                i.putExtra("extraLot", selectedLot);
+                i.putExtra("extraNewUsed", selectedValueNewUsed);
+                startActivityForResult(i, 2);
+                break;
         }
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
-        builder.setTitle("Remove Entry?");
-        builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                // Delete the item from the adapter
-                int position = vehicleList.getPositionForView(mViewToRemove);
-                DBVehicleEntry.removePhysicalByVin(dbHelper, listAdapter.getItem(position - 1).getVIN());
-                listAdapter.remove(listAdapter.getItem(position - 1));
-                textCount.setText("Count( " + phys.size() + ")");
-                dialog.dismiss();
-            }
-        });
-        builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                //TODO
-                dialog.dismiss();
-            }
-        });
-        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
-            @Override
-            public void onDismiss(DialogInterface dialog) {
+        return true;
+    }
 
-            }
-        });
-        AlertDialog dialog = builder.create();
-        dialog.show();
+    private class ActionModeCallback implements ActionMode.Callback {
 
+        @Override
+        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+            // inflate contextual menu
+            mode.getMenuInflater().inflate(R.menu.context_physical, menu);
+            return true;
+        }
 
-        final ViewTreeObserver observer = listview.getViewTreeObserver();
-        observer.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
-            public boolean onPreDraw() {
-                observer.removeOnPreDrawListener(this);
-                boolean firstAnimation = true;
-                int firstVisiblePosition = listview.getFirstVisiblePosition();
-                for (int i = 0; i < listview.getChildCount(); ++i) {
-                    final View child = listview.getChildAt(i);
-                    int position = firstVisiblePosition + i;
-                    long itemId = listAdapter.getItemId(position);
-                    Integer startTop = mItemIdTopMap.get(itemId);
-                    int top = child.getTop();
-                    if (startTop != null) {
-                        if (startTop != top) {
-                            int delta = startTop - top;
-                            child.setTranslationY(delta);
-                            child.animate().setDuration(MOVE_DURATION).translationY(0);
-                            if (firstAnimation) {
-                                child.animate().withEndAction(new Runnable() {
-                                    public void run() {
-                                        mBackgroundContainer.hideBackground();
-                                        mSwiping = false;
-                                        vehicleList.setEnabled(true);
-                                    }
-                                });
-                                firstAnimation = false;
-                            }
-                        }
-                    } else {
-                        // Animate new views along with the others. The catch is that they did not
-                        // exist in the start state, so we must calculate their starting position
-                        // based on neighboring views.
-                        int childHeight = child.getHeight() + listview.getDividerHeight();
-                        startTop = top + (i > 0 ? childHeight : -childHeight);
-                        int delta = startTop - top;
-                        child.setTranslationY(delta);
-                        child.animate().setDuration(MOVE_DURATION).translationY(0);
-                        if (firstAnimation) {
-                            child.animate().withEndAction(new Runnable() {
-                                public void run() {
-                                    mBackgroundContainer.hideBackground();
-                                    mSwiping = false;
-                                    vehicleList.setEnabled(true);
+        @Override
+        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+            return false;
+        }
+
+        @Override
+        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+            final ActionMode mMode = mode;
+            switch (item.getItemId()) {
+                case R.id.action_delete:
+                    AlertDialog.Builder builder = new AlertDialog.Builder(PhysicalActivity.this);
+                    builder.setTitle("Remove selected entries?");
+                    builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            // retrieve selected items and delete them out
+                            SparseBooleanArray selected = listAdapter.getSelectedIds();
+
+                            for (int i = (selected.size()); i >= 0; i--) {
+                                if (selected.valueAt(i)) {
+                                    int found = selected.keyAt(i);
+                                    Physical selectedItem = listAdapter.getItem(found);
+                                    DBVehicleEntry.removePhysicalByVin(dbHelper, listAdapter.getItem(found).getVIN());
+                                    listAdapter.remove(selectedItem);
+                                    textCount.setText("Count( " + phys.size() + ")");
                                 }
-                            });
-                            firstAnimation = false;
+                            }
+                            mMode.finish(); // Action picked, so close the CAB
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            //TODO
+                            dialog.dismiss();
+                        }
+                    });
+
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                    return true;
+                case R.id.action_edit:
+
+                    SparseBooleanArray selected = listAdapter.getSelectedIds();
+                    ArrayList<String> selectedItems = new ArrayList<String>();
+
+                    for (int i = (selected.size()); i >= 0; i--) {
+                        if (selected.valueAt(i)) {
+                            int found = selected.keyAt(i);
+                            Physical selectedItem = listAdapter.getItem(found);
+                            selectedItems.add(selectedItem.getVIN());
                         }
                     }
-                }
-                mItemIdTopMap.clear();
-                return true;
+
+                    Intent i = new Intent(PhysicalActivity.this, EditEntryActivity.class);
+
+                    if(selectedItems.size() > 1)
+                        i.putExtra("extraDealership", selectedDealership);
+
+                    i.putExtra("extraSelectedItems", selectedItems);
+                    i.putExtra("extraLotIndex", selectedLot);
+                    i.putExtra("extraNewUsedIndex", selectedValueNewUsed);
+                    i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
+                    startActivityForResult(i, 2);
+
+                    mMode.finish();
+
+                    return true;
+                default:
+                    return false;
             }
-        });
+
+        }
+
+        @Override
+        public void onDestroyActionMode(ActionMode mode) {
+            // remove selection
+            listAdapter.removeSelection();
+            mActionMode = null;
+        }
     }
 
     public void GetDealershipsDB() {
 
+        Dealership initialDealership = new Dealership();
+        initialDealership.Id = -1;
+        initialDealership.DealerCode = "-1";
+        initialDealership.Name = "(Select Dealership)";
+        initialDealership.Lot1Name = "*";
+        initialDealership.Lot2Name = "*";
+        initialDealership.Lot3Name = "*";
+        initialDealership.Lot4Name = "*";
+        initialDealership.Lot5Name = "*";
+        initialDealership.Lot6Name = "*";
+        initialDealership.Lot7Name = "*";
+        initialDealership.Lot8Name = "*";
+        initialDealership.Lot9Name = "*";
+
+
         Cursor c;
-        if(DBUsers.hasFilteredDealerships(dbHelper, String.valueOf(Utilities.currentUser.Id)))
+        if (DBUsers.hasFilteredDealerships(dbHelper, String.valueOf(Utilities.currentUser.Id)))
             c = DBUsers.getFilteredDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
         else
             c = DBUsers.getDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
 
         dealershipList = new ArrayList(c.getCount());
+        dealershipList.add(initialDealership);
         spinnerDealershipMap.clear();
+        spinnerDealershipMap.put(initialDealership.Name, initialDealership.DealerCode);
 
         if (c.moveToFirst()) {
             do {
@@ -619,41 +608,6 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
         }
     }
 
-    private void showActionBar() {
-
-        ActionBar actionBar = getActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(false);
-        actionBar.setDisplayShowHomeEnabled (false);
-        actionBar.setDisplayShowCustomEnabled(true);
-        actionBar.setDisplayShowTitleEnabled(false);
-        actionBar.setCustomView(R.layout.physical_header_bar);
-        //actionBar.setCustomView(v);
-
-        ImageButton btnManualEntry = (ImageButton) findViewById(R.id.btnManualEntry);
-        btnManualEntry.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.v(TAG, "onOptionsItemSelected - ManualEntry");
-                Intent i = new Intent(PhysicalActivity.this, ManualEntryActivity.class);
-                i.putExtra("extraAppType", "PHYSICAL");
-                i.putExtra("extraDealership", selectedDealership);
-                i.putExtra("extraDealershipIndex", spinnerDealership.getSelectedItemPosition());
-                i.putExtra("extraLot", selectedLot);
-                i.putExtra("extraNewUsed", selectedValueNewUsed);
-                startActivityForResult(i, 2);
-            }
-        });
-
-        ImageButton btnUpload = (ImageButton) findViewById(R.id.btnUpload);
-        btnUpload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.v(TAG, "onOptionsItemSelected - Upload Physical");
-                new ccUploadTask().execute();
-            }
-        });
-    }
-
     @Override
     protected void onResume() {
 // TODO Auto-generated method stub
@@ -671,6 +625,13 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
                 //Check if the data has come from the barcode scanner
                 if (source.equalsIgnoreCase("scanner")) {
+
+                    if(selectedDealership.equals("-1"))
+                    {
+                        Toast.makeText(PhysicalActivity.this, "Please selected a dealership", Toast.LENGTH_LONG).show();
+                        Utilities.playError(PhysicalActivity.this);
+                        return;
+                    }
                     //Get the data from the intent
                     String data = intent.getStringExtra(getString(R.string.datawedge_data_string));
 
@@ -680,17 +641,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
                         if (!Utilities.isValidVin(barcode)) {
                             // alert user that vin is not valid
-                            try {
-                                mp = MediaPlayer.create(PhysicalActivity.this, R.raw.error);
-                                mp.setVolume(1, 1);
-                                vib = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-                                long[] pattern = {300, 300, 1000};
-                                vib.vibrate(pattern, -1);
-                                mp.start();
-
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
+                           Utilities.playError(PhysicalActivity.this);
 
                         }
 
@@ -784,7 +735,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
     public void GetPhysicalDB() {
 
         phys = new ArrayList();
-        listAdapter = new PhysicalListAdapter(PhysicalActivity.this, 0, phys, mTouchListener);
+        listAdapter = new PhysicalListAdapter(PhysicalActivity.this, 0, phys, mClickListener, mLongClickListener);
         vehicleList.setAdapter(listAdapter);
 
         Cursor c = DBVehicleEntry.getPhysicalByDealership(dbHelper, selectedDealership);
@@ -891,7 +842,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
     }
 
-    private void DisplayResults(JSONObject data){
+    private void DisplayResults(JSONObject data) {
 
         JSONObject responseData;
         JSONArray uploadResults;
@@ -932,7 +883,8 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 //            myData.put("Total Count", totalCount);
 //            Mint.logEvent("Upload Complete", MintLogLevel.Info, myData);
 
-        }catch(JSONException ex){}
+        } catch (JSONException ex) {
+        }
     }
 
     private class ccUploadTask extends AsyncTask<String, Void, Boolean> {
@@ -941,6 +893,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
         protected Boolean doInBackground(String... params) {
             return Utilities.hasInternetAccess(PhysicalActivity.this);
         }
+
         @Override
         protected void onPostExecute(Boolean result) {
             if (result) {
@@ -966,9 +919,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
                 });
                 AlertDialog dialog = builder.create();
                 dialog.show();
-            }
-            else
-            {
+            } else {
                 Toast.makeText(getApplicationContext(), "Please check your internet connection.", Toast.LENGTH_LONG).show();
             }
         }
@@ -1022,6 +973,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
             } else {
                 mProgressDialog.dismiss();
+                Toast.makeText(getApplicationContext(), errorMessage, Toast.LENGTH_LONG).show();
             }
         }
 

@@ -54,7 +54,7 @@ public class DBVehicleEntry {
         return true;
     }
 
-    public static boolean updateVehicleEntry(DBHelper dbh, String vin, String dealership, String newUsed, String entryType, String lot, String date, String time, String notes, String userId)
+    public static boolean updateVehicleEntry(DBHelper dbh, boolean isMultiUpdate, String vin, String dealership, String newUsed, String entryType, String lot, String date, String time, String notes, String userId)
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
@@ -64,7 +64,10 @@ public class DBVehicleEntry {
         contentValues.put(VEHICLE_ENTRY_COLUMN_LOT, lot);
         contentValues.put(VEHICLE_ENTRY_COLUMN_DATE, date);
         contentValues.put(VEHICLE_ENTRY_COLUMN_TIME, time);
-        contentValues.put(VEHICLE_ENTRY_COLUMN_NOTES, notes);
+        if(isMultiUpdate && !notes.equals(""))
+            contentValues.put(VEHICLE_ENTRY_COLUMN_NOTES, notes);
+        else if(!isMultiUpdate)
+            contentValues.put(VEHICLE_ENTRY_COLUMN_NOTES, notes);
         contentValues.put(VEHICLE_ENTRY_COLUMN_USER_ID, userId);
 
         db.update(VEHICLE_ENTRY_TABLE_NAME, contentValues, "vin = ?", new String[]{vin});
@@ -148,10 +151,18 @@ public class DBVehicleEntry {
     public static void removePhysicalByVin(DBHelper dbh, String vin)
     {
         SQLiteDatabase db = dbh.getWritableDatabase();
-        //db.execSQL("DELETE FROM " + VEHICLE_ENTRY_TABLE_NAME + " WHERE vin=" + vin);
         db.delete(VEHICLE_ENTRY_TABLE_NAME,
                 VEHICLE_ENTRY_COLUMN_VIN + " = ? ",
                 new String[] {vin});
+    }
+
+    public static Cursor getEntryByVin(DBHelper dbh, String vin)
+    {
+        SQLiteDatabase db = dbh.getWritableDatabase();
+        Cursor c = db.rawQuery("select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_VIN + " = ? ",
+                new String[] {vin});
+
+        return c;
     }
 
     public static ArrayList GetPhysicalForUpload(DBHelper dbh, String user) {

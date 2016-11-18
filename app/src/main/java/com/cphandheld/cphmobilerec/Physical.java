@@ -18,6 +18,7 @@ public class Physical {
     private String Latitude;
     private String Longitude;
 
+    public Physical() {}
 
     public Physical( String vin, String dealership, String entryType, String newUsed, String date, String time, String lot, String notes, String userId, String latitude, String longitude) {
         VIN = vin;

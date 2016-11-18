@@ -34,18 +34,19 @@ public class EditEntryActivity extends ActionBarActivity {
     EditText editTextNotes;
 
     String sentDealership;
-    String sentLot;
-    String sentNewUsed;
     String sentVin;
-    String sentEntryType;
-    String sentNotes;
+    ArrayList<String> sentSelectedItems = new ArrayList<>();
 
     String newUsedIndex;
     String lotIndex;
     int sentDealershipIndex;
-    int sentDealerPos;
-    int selectionCounter = 0;
+    String newUsed;
+    String lot;
+    String notes;
+    String entryType;
     boolean firstLoad = true;
+    boolean isMultiEdit = false;
+
 
     DBHelper dbHelper;
 
@@ -61,35 +62,54 @@ public class EditEntryActivity extends ActionBarActivity {
         setContentView(R.layout.activity_edit_entry);
 
         ActionBar actionBar = getActionBar();
-        //actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>EDIT ENTRY</font>"));
         actionBar.show();
 
         Intent intent = getIntent();
-        sentDealership = intent.getStringExtra("extraDealership");
-        sentLot = intent.getStringExtra("extraLot");
-        sentNewUsed = intent.getStringExtra("extraNewUsed");
+
+        dbHelper = new DBHelper(EditEntryActivity.this);
+        dbHelper.getWritableDatabase();
+
         sentVin = intent.getStringExtra("extraVin");
-        sentEntryType = intent.getStringExtra("extraEntryType");
-        sentNotes = intent.getStringExtra("extraNotes");
-        sentDealerPos = intent.getIntExtra("extraDealerPos", 0);
         lotIndex = intent.getStringExtra("extraLotIndex");
         newUsedIndex = intent.getStringExtra("extraNewUsedIndex");
         sentDealershipIndex = intent.getIntExtra("extraDealershipIndex", 0);
+        sentSelectedItems = intent.getStringArrayListExtra("extraSelectedItems");
 
-        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>" + sentVin + "</font>"));
+        if(sentSelectedItems.size() > 1) {
+            actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>EDITING " + sentSelectedItems.size() + " ITEMS</font>"));
+            sentDealership = intent.getStringExtra("extraDealership");
+            isMultiEdit = true;
+        }
+        else if (sentSelectedItems.size() == 1){
+            sentVin = sentSelectedItems.get(0);
+            actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>" + sentVin + "</font>"));
+            Physical p = getVehicleEntry(sentVin);
+            sentDealership = p.getDealership();
+            newUsed = p.getNewUsed();
+            lot = p.getLot();
+            notes = p.getNotes();
+            entryType = p.getEntryType();
+        }
+        else{
+            actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>" + sentVin + "</font>"));
+            Physical p = getVehicleEntry(sentVin);
+            sentDealership = p.getDealership();
+            newUsed = p.getNewUsed();
+            lot = p.getLot();
+            notes = p.getNotes();
+            entryType = p.getEntryType();
+        }
 
         spinnerDealership = (Spinner) findViewById(R.id.spinnerDealership);
         spinnerNewUsed = (Spinner) findViewById(R.id.spinnerType);
         spinnerLot = (Spinner) findViewById(R.id.spinnerLot);
         editTextNotes = (EditText)findViewById(R.id.textNotes);
-        editTextNotes.setText(sentNotes);
 
-        dbHelper = new DBHelper(EditEntryActivity.this);
-        dbHelper.getWritableDatabase();
+        editTextNotes.setText(notes);
 
         GetDealershipsDB();
 
-        HashMap<String,String> spinnerNewUsedMap = new HashMap<String, String>();
+        final HashMap<String,String> spinnerNewUsedMap = new HashMap<String, String>();
         spinnerNewUsedMap.put("New", "0");
         spinnerNewUsedMap.put("Used", "1");
         spinnerNewUsedMap.put("Loaner", "2");
@@ -102,15 +122,13 @@ public class EditEntryActivity extends ActionBarActivity {
         ArrayAdapter<String> newUsedAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, listNewUsed);
         newUsedAdapter.setDropDownViewResource(R.layout.generic_list);
         spinnerNewUsed.setAdapter(newUsedAdapter);
-        //int position = newUsedAdapter.getPosition(sentNewUsed);
 
         spinnerNewUsed.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1,
                                        int arg2, long arg3) {
-                sentNewUsed = spinnerNewUsed.getSelectedItem().toString();
-
+                newUsed = spinnerNewUsedMap.get(spinnerNewUsed.getSelectedItem().toString());
             }
 
             @Override
@@ -124,7 +142,7 @@ public class EditEntryActivity extends ActionBarActivity {
             String key = e.getKey();
             String value = e.getValue();
 
-            if(value.equals(sentNewUsed))
+            if(!isMultiEdit && value.equals(newUsed))
                 spinnerNewUsed.setSelection(newUsedAdapter.getPosition(key));
         }
 
@@ -134,19 +152,17 @@ public class EditEntryActivity extends ActionBarActivity {
         lotAdapter = new ArrayAdapter<String>(this, R.layout.generic_list, lotList);
         lotAdapter.setDropDownViewResource(R.layout.generic_list);
         spinnerLot.setAdapter(lotAdapter);
-        Log.v(TAG, "SentLot: " + sentLot);
-        int positionLot = lotAdapter.getPosition(sentLot);
-        Log.v(TAG, "SentLot Position: " + positionLot);
+
+        int positionLot = lotAdapter.getPosition(lot);
         spinnerLot.setSelection(positionLot);
-        sentLot = spinnerLot.getSelectedItem().toString();
-        Log.v(TAG, "Selected SentLot: " + sentLot);
+        //lot = spinnerLot.getSelectedItem().toString();
         spinnerLot.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
             @Override
             public void onItemSelected(AdapterView<?> arg0, View arg1,
                                        int arg2, long arg3) {
-                sentLot = spinnerLot.getSelectedItem().toString();
-                Log.v(TAG, "Lot Selected: " + sentLot);
+                lot = spinnerLot.getSelectedItem().toString();
+                Log.v(TAG, "Lot Selected: " + lot);
             }
 
             @Override
@@ -183,7 +199,15 @@ public class EditEntryActivity extends ActionBarActivity {
                 SimpleDateFormat tf = new SimpleDateFormat("h:mm:ss aa");
                 String formattedDate = df.format(c.getTime());
                 String formattedTime = tf.format(c.getTime());
-                DBVehicleEntry.updateVehicleEntry(dbHelper, sentVin, sentDealership, sentNewUsed, sentEntryType, sentLot, formattedDate, formattedTime, editTextNotes.getText().toString(), String.valueOf(Utilities.currentUser.Id));
+
+                if(isMultiEdit){
+                    for(String v: sentSelectedItems)
+                    {
+                        DBVehicleEntry.updateVehicleEntry(dbHelper, true, v, sentDealership, newUsed, entryType, lot, formattedDate, formattedTime, editTextNotes.getText().toString().trim(), String.valueOf(Utilities.currentUser.Id));
+                    }
+                }
+                else
+                    DBVehicleEntry.updateVehicleEntry(dbHelper, false, sentVin, sentDealership, newUsed, entryType, lot, formattedDate, formattedTime, editTextNotes.getText().toString().trim(), String.valueOf(Utilities.currentUser.Id));
 
                 Intent i = new Intent(EditEntryActivity.this, PhysicalActivity.class);
                 setResult(RESULT_OK, i);
@@ -210,6 +234,54 @@ public class EditEntryActivity extends ActionBarActivity {
         finish();
     }
 
+    private Physical getVehicleEntry(String vin)
+    {
+        Physical phy = new Physical();
+        Cursor c = DBVehicleEntry.getEntryByVin(dbHelper, vin);
+
+        if (c.moveToFirst()) {
+            do {
+                int vinIndex = c.getColumnIndex("vin");
+                String v = c.getString(vinIndex);
+
+                int dealershipIndex = c.getColumnIndex("dealership");
+                String dealership = c.getString(dealershipIndex);
+
+                int newUsedIndex = c.getColumnIndex("newused");
+                String newUsed = c.getString(newUsedIndex);
+
+                int entryTypeIndex = c.getColumnIndex("entrytype");
+                String entryType = c.getString(entryTypeIndex);
+
+                int lotIndex = c.getColumnIndex("lot");
+                String lot = c.getString(lotIndex);
+
+                int dateIndex = c.getColumnIndex("date");
+                String date = c.getString(dateIndex);
+
+                int timeIndex = c.getColumnIndex("time");
+                String time = c.getString(timeIndex);
+
+                int notesIndex = c.getColumnIndex("notes");
+                String notes = c.getString(notesIndex);
+
+                int userIdIndex = c.getColumnIndex("userid");
+                String userId = c.getString(userIdIndex);
+
+                int latitudeIndex = c.getColumnIndex("latitude");
+                String latitude = c.getString(latitudeIndex);
+
+                int longitudeIndex = c.getColumnIndex("longitude");
+                String longitude = c.getString(longitudeIndex);
+
+                phy = new Physical(v, dealership, entryType, newUsed, date, time, lot, notes, userId, latitude, longitude);
+
+            } while (c.moveToNext());
+        }
+        c.close();
+        return phy;
+    }
+
     private Dealership GetDealershipForSpinner()
     {
         Dealership d = new Dealership();
@@ -223,6 +295,7 @@ public class EditEntryActivity extends ActionBarActivity {
     }
 
     public void GetDealershipsDB() {
+
         Cursor c;
         if(DBUsers.hasFilteredDealerships(dbHelper,String.valueOf(Utilities.currentUser.Id)))
             c = DBUsers.getFilteredDealershipsByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
@@ -267,7 +340,6 @@ public class EditEntryActivity extends ActionBarActivity {
         c.close();
 
         if (dealershipList != null && dealershipList.size() > 0) {
-            //lotAdapter.notifyDataSetChanged();
             dealershipAdapter = new ArrayAdapter<Dealership>(this, R.layout.generic_list, dealershipList);
             dealershipAdapter.setDropDownViewResource(R.layout.generic_list);
             spinnerDealership.setAdapter(dealershipAdapter);
@@ -310,7 +382,7 @@ public class EditEntryActivity extends ActionBarActivity {
                     // reset lot spinner
                     lotAdapter.notifyDataSetChanged();
                     spinnerLot.setSelection(0);
-                    sentLot = spinnerLot.getSelectedItem().toString();
+                    lot = spinnerLot.getSelectedItem().toString();
                 }
 
                 @Override

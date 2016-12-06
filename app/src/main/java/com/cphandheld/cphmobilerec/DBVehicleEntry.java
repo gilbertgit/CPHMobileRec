@@ -62,7 +62,8 @@ public class DBVehicleEntry {
         ContentValues contentValues = new ContentValues();
         contentValues.put(VEHICLE_ENTRY_COLUMN_DEALERSHIP, dealership);
         contentValues.put(VEHICLE_ENTRY_COLUMN_NEW_USED, newUsed);
-        contentValues.put(VEHICLE_ENTRY_COLUMN_ENTRY_TYPE, entryType);
+        // we do not want to alter the entry method
+        //contentValues.put(VEHICLE_ENTRY_COLUMN_ENTRY_TYPE, entryType);
         contentValues.put(VEHICLE_ENTRY_COLUMN_LOT, lot);
         contentValues.put(VEHICLE_ENTRY_COLUMN_DATE, date);
         contentValues.put(VEHICLE_ENTRY_COLUMN_TIME, time);

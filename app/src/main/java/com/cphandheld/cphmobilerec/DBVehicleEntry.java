@@ -227,7 +227,10 @@ public class DBVehicleEntry {
 
         Calendar c = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
+        SimpleDateFormat tf = new SimpleDateFormat("h-mm-ss");
         String formattedDate = df.format(c.getTime());
+        String formattedTime = tf.format(c.getTime());
+
         SQLiteDatabase db = dbh.getWritableDatabase();
 
         File dbFile =  context.getDatabasePath(DBHelper.DATABASE_NAME);
@@ -236,7 +239,7 @@ public class DBVehicleEntry {
             exportDir.mkdirs();
         }
 
-        File file = new File(exportDir, "REC-" + formattedDate +".csv");
+        File file = new File(exportDir, "REC-" + formattedDate + "-" + formattedTime +".csv");
         try {
             file.createNewFile();
             CSVWriter csvWrite = new CSVWriter(new FileWriter(file));

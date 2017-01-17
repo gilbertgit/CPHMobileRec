@@ -364,6 +364,10 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
         switch (item.getItemId())
         {
             case R.id.action_upload:
+
+                // Backup the data before we do anything
+                DBVehicleEntry.BackupPhysicalDB(dbHelper, getApplicationContext(), String.valueOf(Utilities.currentUser.Id));
+
                 new ccUploadTask().execute();
                 break;
             case R.id.action_manual:
@@ -933,6 +937,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
         @Override
         protected void onPreExecute() {
             mProgressDialog.show();
+
             inventoryData = "";
             Gson gson = new Gson();
             ArrayList physical = DBVehicleEntry.GetPhysicalForUpload(dbHelper, String.valueOf(Utilities.currentUser.Id));
@@ -961,7 +966,6 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
             if (result) {
 
-                DBVehicleEntry.BackupPhysicalDB(dbHelper, getApplicationContext(), String.valueOf(Utilities.currentUser.Id));
                 DBVehicleEntry.clearPhysicalTableByUser(dbHelper, String.valueOf(Utilities.currentUser.Id));
                 phys.clear();
                 listAdapter.notifyDataSetChanged();

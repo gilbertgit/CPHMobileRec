@@ -381,6 +381,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
             mProgressDialog.setMessage("Hold on a sec...");
             mProgressDialog.show();
 
+            DBRescan.BackupRescanDB(dbHelper, getApplicationContext(), String.valueOf(Utilities.currentUser.Id));
 
             rescanData = "";
             Gson gson = new Gson();

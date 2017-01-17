@@ -238,7 +238,10 @@ public class DBRescan {
 
         Calendar c = Calendar.getInstance();
         SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
+        SimpleDateFormat tf = new SimpleDateFormat("h-mm-ss");
         String formattedDate = df.format(c.getTime());
+        String formattedTime = tf.format(c.getTime());
+
         SQLiteDatabase db = dbh.getReadableDatabase();
 
         File dbFile =  context.getDatabasePath(DBHelper.DATABASE_NAME);
@@ -247,7 +250,7 @@ public class DBRescan {
             exportDir.mkdirs();
         }
 
-        File file = new File(exportDir, "RESCAN" + formattedDate +".csv");
+        File file = new File(exportDir, "RESCAN-" + formattedDate + "-" + formattedTime +".csv");
         try {
             file.createNewFile();
             CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
@@ -256,7 +259,7 @@ public class DBRescan {
             csvWrite.writeNext(curCSV.getColumnNames());
             while (curCSV.moveToNext()) {
                 //Which column you want to export
-                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2)};
+                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2), curCSV.getString(3), curCSV.getString(4), curCSV.getString(5), curCSV.getString(6)};
                 csvWrite.writeNext(arrStr);
             }
             csvWrite.close();

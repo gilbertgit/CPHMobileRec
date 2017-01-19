@@ -2,7 +2,9 @@ package com.cphandheld.cphmobilerec;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -13,22 +15,39 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import java.io.File;
+import it.sauronsoftware.ftp4j.FTPClient;
+import it.sauronsoftware.ftp4j.FTPDataTransferListener;
+
 /**
  * Created by titan on 5/20/16.
  */
 public class AdminActivity extends Activity {
 
-    private EditText editTextUrl;
-    private Button buttonSetUrl;
+    EditText editTextUrl;
+    Button buttonSetUrl;
+    Button buttonExportData;
+    Button buttonClearDB;
+
+    DBHelper dbHelper;
+
+    static final String FTP_HOST= "50.63.92.56";
+    static final String FTP_USER = "XXXXXX";
+    static final String FTP_PASS  ="XXXXXXX";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
 
+        dbHelper = new DBHelper(AdminActivity.this);
+        dbHelper.getWritableDatabase();
+
         editTextUrl = (EditText)findViewById(R.id.editTextUrl);
         editTextUrl.setText(Utilities.AppURL);
         buttonSetUrl = (Button)findViewById(R.id.buttonSetUrl);
+        buttonExportData = (Button)findViewById(R.id.buttonExportData);
+        buttonClearDB = (Button)findViewById(R.id.buttonClearDB);
 
         ActionBar actionBar = getActionBar();
         actionBar.setTitle("Admin Mode");
@@ -47,6 +66,64 @@ public class AdminActivity extends Activity {
                 Toast.makeText(getApplicationContext(), "App Url Changed!", Toast.LENGTH_LONG).show();
             }
         });
+
+        buttonExportData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                // Back it up
+                File physicalFile = DBVehicleEntry.BackupPhysicalDBAdmin(dbHelper);
+                File rescanFile = DBRescan.BackupRescanDBAdmin(dbHelper);
+
+                if(physicalFile !=  null && rescanFile != null)
+                    ShowBackupDialog(physicalFile, rescanFile);
+                else
+                    Toast.makeText(AdminActivity.this, "Backup error occurred", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        buttonClearDB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ClearDatabase();
+            }
+        });
+    }
+
+    private void ShowBackupDialog(File physicalFile, File rescanFile)
+    {
+       new AlertDialog.Builder(this)
+            .setTitle("Backup Complete!")
+            .setMessage("You can find the backup files in the root of the file system in a folder called \"cphmobile\"." +
+            " Use the File Browser app in your app drawer to navigate to the files. Would you like to upload the files to the CPH server?")
+            .setIcon(android.R.drawable.ic_dialog_alert)
+               .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                   public void onClick(DialogInterface dialog, int whichButton) {
+
+
+
+                   }})
+               .setNegativeButton(android.R.string.no, null).show();
+    }
+
+    private void ClearDatabase()
+    {
+        new AlertDialog.Builder(this)
+            .setTitle("ALERT!")
+            .setMessage("Are you sure you want to clear all database data? This cannot be undone!")
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+
+                public void onClick(DialogInterface dialog, int whichButton) {
+
+                    DBVehicleEntry.clearPhysicalTable(dbHelper);
+                    DBRescan.clearRescanTable(dbHelper);
+
+                    Toast.makeText(AdminActivity.this, "Annnnd itss gooonne!", Toast.LENGTH_SHORT).show();
+
+                }})
+            .setNegativeButton(android.R.string.no, null).show();
     }
 
     public void onBackPressed()
@@ -59,5 +136,74 @@ public class AdminActivity extends Activity {
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(i);
+    }
+
+    public void uploadFile(File fileName){
+
+
+        FTPClient client = new FTPClient();
+
+        try {
+
+            client.connect(FTP_HOST,21);
+            client.login(FTP_USER, FTP_PASS);
+            client.setType(FTPClient.TYPE_BINARY);
+            //client.changeDirectory("/upload/");
+
+            client.upload(fileName, new MyTransferListener());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                client.disconnect(true);
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+        }
+
+    }
+
+    public class MyTransferListener implements FTPDataTransferListener {
+
+        public void started() {
+
+            //btn.setVisibility(View.GONE);
+            // Transfer started
+            Toast.makeText(getBaseContext(), " Upload Started ...", Toast.LENGTH_SHORT).show();
+            //System.out.println(" Upload Started ...");
+        }
+
+        public void transferred(int length) {
+
+            // Yet other length bytes has been transferred since the last time this
+            // method was called
+            Toast.makeText(getBaseContext(), " transferred ..." + length, Toast.LENGTH_SHORT).show();
+            //System.out.println(" transferred ..." + length);
+        }
+
+        public void completed() {
+
+            //btn.setVisibility(View.VISIBLE);
+            // Transfer completed
+
+            Toast.makeText(getBaseContext(), " completed ...", Toast.LENGTH_SHORT).show();
+            //System.out.println(" completed ..." );
+        }
+
+        public void aborted() {
+
+            //btn.setVisibility(View.VISIBLE);
+            // Transfer aborted
+            Toast.makeText(getBaseContext()," transfer aborted , please try again...", Toast.LENGTH_SHORT).show();
+            //System.out.println(" aborted ..." );
+        }
+
+        public void failed() {
+
+            //btn.setVisibility(View.VISIBLE);
+            // Transfer failed
+            System.out.println(" failed ..." );
+        }
+
     }
 }

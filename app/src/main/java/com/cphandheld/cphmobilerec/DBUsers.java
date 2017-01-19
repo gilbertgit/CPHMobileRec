@@ -73,7 +73,7 @@ public class DBUsers {
 
             c = db.rawQuery(query, new String[] {userId});
             int count  = c.getCount();
-            boolean test = count > 1;
+            boolean test = count > 0;
             if(test) {
                 result = true;
             }

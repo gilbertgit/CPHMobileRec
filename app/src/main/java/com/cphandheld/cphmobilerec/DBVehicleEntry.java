@@ -260,4 +260,45 @@ public class DBVehicleEntry {
             Log.e("ExportData", sqlEx.getMessage(), sqlEx);
         }
     }
+
+    public static File BackupPhysicalDBAdmin(DBHelper dbh) {
+
+        Calendar c = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("MM-dd-yy");
+        SimpleDateFormat tf = new SimpleDateFormat("h-mm-ss");
+        String formattedDate = df.format(c.getTime());
+        String formattedTime = tf.format(c.getTime());
+
+        SQLiteDatabase db = dbh.getWritableDatabase();
+
+        File exportDir = new File(Environment.getExternalStorageDirectory()+"/cphmobile/", "");
+        if (!exportDir.exists()) {
+            exportDir.mkdirs();
+        }
+
+        String fileName = "REC-" + formattedDate + "-" + formattedTime +".csv";
+
+        File file = new File(exportDir, fileName);
+        try {
+            file.createNewFile();
+            CSVWriter csvWrite = new CSVWriter(new FileWriter(file));
+
+            Cursor curCSV = db.rawQuery("SELECT * FROM " + VEHICLE_ENTRY_TABLE_NAME, null);
+            csvWrite.writeNext(curCSV.getColumnNames());
+            while (curCSV.moveToNext()) {
+                //Which column you want to export
+                String arrStr[] = {curCSV.getString(0), curCSV.getString(1), curCSV.getString(2),
+                        curCSV.getString(3), curCSV.getString(4), curCSV.getString(5),
+                        curCSV.getString(6), curCSV.getString(7), curCSV.getString(8),
+                        curCSV.getString(9), curCSV.getString(10), curCSV.getString(11)};
+                csvWrite.writeNext(arrStr);
+            }
+            csvWrite.close();
+            curCSV.close();
+            return file;
+        } catch (Exception sqlEx) {
+            Log.e("ExportData", sqlEx.getMessage(), sqlEx);
+            return null;
+        }
+    }
 }

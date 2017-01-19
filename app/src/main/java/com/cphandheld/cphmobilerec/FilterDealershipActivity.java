@@ -21,7 +21,7 @@ import java.util.ArrayList;
  */
 public class FilterDealershipActivity extends Activity {
 
-    private String TAG = "FilterDealershipActivity";
+    private String TAG = "FilterDealership";
 
     DBHelper dbHelper;
     ListView listAllDealerships;

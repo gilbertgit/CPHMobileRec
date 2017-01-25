@@ -7,7 +7,10 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -15,7 +18,19 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+
 import it.sauronsoftware.ftp4j.FTPClient;
 import it.sauronsoftware.ftp4j.FTPDataTransferListener;
 
@@ -28,17 +43,21 @@ public class AdminActivity extends Activity {
     Button buttonSetUrl;
     Button buttonExportData;
     Button buttonClearDB;
+    Button buttonUploadData;
 
     DBHelper dbHelper;
 
-    static final String FTP_HOST= "50.63.92.56";
-    static final String FTP_USER = "XXXXXX";
-    static final String FTP_PASS  ="XXXXXXX";
+    static final String FTP_HOST= "ftp.cphandheld.com";
+    static final String FTP_USER = "scannerftp";
+    static final String FTP_PASS  ="7ygvfr4*";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin);
+
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
 
         dbHelper = new DBHelper(AdminActivity.this);
         dbHelper.getWritableDatabase();
@@ -47,6 +66,7 @@ public class AdminActivity extends Activity {
         editTextUrl.setText(Utilities.AppURL);
         buttonSetUrl = (Button)findViewById(R.id.buttonSetUrl);
         buttonExportData = (Button)findViewById(R.id.buttonExportData);
+        buttonUploadData = (Button)findViewById(R.id.buttonUploadData);
         buttonClearDB = (Button)findViewById(R.id.buttonClearDB);
 
         ActionBar actionBar = getActionBar();
@@ -75,10 +95,27 @@ public class AdminActivity extends Activity {
                 File physicalFile = DBVehicleEntry.BackupPhysicalDBAdmin(dbHelper);
                 File rescanFile = DBRescan.BackupRescanDBAdmin(dbHelper);
 
+
+                uploadFile(physicalFile);
+                if(physicalFile !=  null && rescanFile != null)
+                    Toast.makeText(AdminActivity.this, "Successful backup", Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(AdminActivity.this, "Backup error occurred", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        buttonUploadData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Back it up
+                File physicalFile = DBVehicleEntry.BackupPhysicalDBAdmin(dbHelper);
+                File rescanFile = DBRescan.BackupRescanDBAdmin(dbHelper);
+
                 if(physicalFile !=  null && rescanFile != null)
                     ShowBackupDialog(physicalFile, rescanFile);
                 else
                     Toast.makeText(AdminActivity.this, "Backup error occurred", Toast.LENGTH_LONG).show();
+
             }
         });
 
@@ -90,7 +127,7 @@ public class AdminActivity extends Activity {
         });
     }
 
-    private void ShowBackupDialog(File physicalFile, File rescanFile)
+    private void ShowBackupDialog(final File physicalFile, final File rescanFile)
     {
        new AlertDialog.Builder(this)
             .setTitle("Backup Complete!")
@@ -100,9 +137,8 @@ public class AdminActivity extends Activity {
                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
 
                    public void onClick(DialogInterface dialog, int whichButton) {
-
-
-
+                       uploadFile(physicalFile);
+                       uploadFile(rescanFile);
                    }})
                .setNegativeButton(android.R.string.no, null).show();
     }
@@ -145,10 +181,9 @@ public class AdminActivity extends Activity {
 
         try {
 
-            client.connect(FTP_HOST,21);
+            client.connect(FTP_HOST);
             client.login(FTP_USER, FTP_PASS);
-            client.setType(FTPClient.TYPE_BINARY);
-            //client.changeDirectory("/upload/");
+            //client.setType(FTPClient.TYPE_BINARY);
 
             client.upload(fileName, new MyTransferListener());
 

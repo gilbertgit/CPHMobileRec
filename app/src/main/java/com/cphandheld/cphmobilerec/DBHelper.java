@@ -47,7 +47,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public DBHelper(Context context)
     {
-        super(context, DATABASE_NAME, null, 2);
+        super(context, DATABASE_NAME, null, 3);
         this.dbHelper = this;
         this.sqdb = dbHelper.getWritableDatabase();
     }
@@ -69,6 +69,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL("DROP TABLE IF EXISTS " + VEHICLE_ENTRY_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + DEALERSHIPS_TABLE_NAME);
         db.execSQL("DROP TABLE IF EXISTS " + RESCAN_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + DEALERSHIPS_SELECTED_TABLE_NAME);
         onCreate(db);
     }
 

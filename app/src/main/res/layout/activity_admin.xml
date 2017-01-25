@@ -33,21 +33,6 @@
         android:layout_alignParentEnd="true"/>
 
     <Button
-        android:id="@+id/buttonExportData"
-        android:layout_width="wrap_content"
-        android:layout_height="36dp"
-        android:padding="5dp"
-        android:fontFamily="Lato Regular"
-        android:background="@color/colorLoginOrgText"
-        android:textColor="@android:color/white"
-        android:text="EXPORT DATA"
-        android:textSize="20sp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="32dp"
-        android:layout_below="@+id/editTextUrl"
-        android:layout_alignStart="@+id/editTextUrl"/>
-
-    <Button
         android:id="@+id/buttonClearDB"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
@@ -61,5 +46,54 @@
         android:layout_marginBottom="38dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"/>
+
+    <Button
+        android:id="@+id/buttonUploadData"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:padding="5dp"
+        android:fontFamily="Lato Regular"
+        android:background="@color/colorLoginOrgText"
+        android:textColor="@android:color/white"
+        android:text="UPLOAD DATA"
+        android:textSize="20sp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="110dp"
+        android:layout_below="@+id/buttonExportData"
+        android:layout_alignStart="@+id/buttonExportData"/>
+
+    <TextView
+        android:text="Export data to local device storage:"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView4"
+        android:textSize="22sp"
+        android:layout_marginTop="57dp"
+        android:layout_below="@+id/editTextUrl"
+        android:layout_alignStart="@+id/editTextUrl"/>
+
+    <TextView
+        android:text="Export AND upload data:"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView6"
+        android:textSize="22sp"
+        android:layout_alignBottom="@+id/buttonUploadData"
+        android:layout_alignStart="@+id/buttonUploadData"
+        android:layout_marginBottom="43dp"/>
+
+    <Button
+        android:id="@+id/buttonExportData"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:padding="5dp"
+        android:fontFamily="Lato Regular"
+        android:background="@color/colorLoginOrgText"
+        android:textColor="@android:color/white"
+        android:text="EXPORT DATA"
+        android:textSize="20sp"
+        android:layout_marginRight="10dp"
+        android:layout_below="@+id/textView4"
+        android:layout_alignStart="@+id/textView4"/>
 
 </RelativeLayout>

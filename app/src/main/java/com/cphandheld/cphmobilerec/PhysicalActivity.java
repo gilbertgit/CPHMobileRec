@@ -639,7 +639,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
                     if(selectedDealership.equals("-1"))
                     {
-                        Toast.makeText(PhysicalActivity.this, "Please selected a dealership", Toast.LENGTH_LONG).show();
+                        Toast.makeText(PhysicalActivity.this, "Please select a dealership", Toast.LENGTH_LONG).show();
                         Utilities.playError(PhysicalActivity.this);
                         return;
                     }

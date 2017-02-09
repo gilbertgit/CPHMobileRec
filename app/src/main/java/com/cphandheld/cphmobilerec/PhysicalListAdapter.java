@@ -81,6 +81,11 @@ public class PhysicalListAdapter  extends ArrayAdapter<Physical> {
         else
             ((ImageView)convertView.findViewById(R.id.imageLengthWarning)).setVisibility(View.GONE);
 
+        if(phy.getNotes().length() > 0)
+            (convertView.findViewById(R.id.imageHasNote)).setVisibility(View.VISIBLE);
+        else
+            (convertView.findViewById(R.id.imageHasNote)).setVisibility(View.GONE);
+
         convertView.setBackgroundColor(mSelectedItemsIds.get(position) ? Color.LTGRAY
                         : Color.TRANSPARENT);
 

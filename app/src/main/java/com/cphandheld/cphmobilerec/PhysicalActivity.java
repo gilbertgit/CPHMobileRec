@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Rect;
@@ -18,6 +19,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 //import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
@@ -63,11 +65,16 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 
 /**
@@ -374,7 +381,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
                 if(selectedDealership.equals("-1"))
                 {
-                    Toast.makeText(PhysicalActivity.this, "Please selected a dealership", Toast.LENGTH_LONG).show();
+                    Toast.makeText(PhysicalActivity.this, "Please select a dealership", Toast.LENGTH_LONG).show();
                     Utilities.playError(PhysicalActivity.this);
                     break;
                 }
@@ -738,11 +745,14 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
     public void GetPhysicalDB() {
 
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(PhysicalActivity.this);
+        boolean sort = prefs.getBoolean(SettingsActivity.KEY_PREF_SORTBY_LASTUPDATE, false);
+
         phys = new ArrayList();
         listAdapter = new PhysicalListAdapter(PhysicalActivity.this, 0, phys, mClickListener, mLongClickListener);
         vehicleList.setAdapter(listAdapter);
 
-        Cursor c = DBVehicleEntry.getPhysicalByDealership(PhysicalActivity.this, dbHelper, selectedDealership);
+        Cursor c = DBVehicleEntry.getPhysicalByDealership(dbHelper, selectedDealership, sort);
 
         if (c.moveToFirst()) {
             do {
@@ -786,6 +796,32 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
         c.close();
 
         if (phys != null && phys.size() > 0) {
+
+            if(!sort) {
+                Collections.sort(phys, new Comparator<Physical>() {
+                    public int compare(Physical p1, Physical p2) {
+                        String dt1 = p1.getTimeStamp();
+                        String dt2 = p2.getTimeStamp();
+
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yy h:mm:ss aa");
+                        long timeInMilliseconds1 = 0;
+                        long timeInMilliseconds2 = 0;
+                        try {
+                            Date mDate1 = sdf.parse(dt1);
+                            timeInMilliseconds1 = mDate1.getTime();
+                            Date mDate2 = sdf.parse(dt2);
+                            timeInMilliseconds2 = mDate2.getTime();
+
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+
+                        return String.valueOf(timeInMilliseconds2).compareTo(String.valueOf(timeInMilliseconds1));
+                    }
+                });
+            }
+
             listAdapter.notifyDataSetChanged();
         }
 
@@ -821,11 +857,16 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
     @Override
     protected void onPause() {
+//        if (emdkManager != null)
+//            this.emdkManager.release();
+
         super.onPause();
 
         // Kill the GPS receiver
         //gpsHelper.stopUsingGPS();
-        //Register our receiver.
+        //Unregister scanner receiver.
+
+
         this.unregisterReceiver(this.EMDKReceiver);
     }
 

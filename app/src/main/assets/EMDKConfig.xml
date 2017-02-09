@@ -4,10 +4,8 @@
   </characteristic>
   <characteristic type="Profile">
     <parm name="ProfileName" value="CPHMobile"/>
-    <parm name="ModifiedDate" value="2016-09-30 12:03:42"/>
+    <parm name="ModifiedDate" value="2017-02-08 21:53:00"/>
     <parm name="TargetSystemVersion" value="4.4"/>
-    
-    
     
     
   <characteristic type="ActivitySelection" version="0.1">
@@ -17,6 +15,7 @@
         <characteristic type="Activities">
           <parm name="activity" value="RescanActivity"/>
           <parm name="activity" value="PhysicalActivity"/>
+          <parm name="activity" value="EditEntryActivity"/>
         </characteristic>
       </characteristic>
     </characteristic>

@@ -121,16 +121,15 @@ public class DBVehicleEntry {
         }
     }
 
-    public static Cursor getPhysicalByDealership(Context c, DBHelper dbh, String dealership){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
-        boolean sort = prefs.getBoolean(SettingsActivity.KEY_PREF_SORTBY_LASTUPDATE, false);
+    public static Cursor getPhysicalByDealership(DBHelper dbh, String dealership, boolean sort){
+
         SQLiteDatabase db = dbh.getReadableDatabase();
 
         Cursor cursor;
         if(sort)
             cursor = db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by id DESC" , new String[] {dealership});
         else
-            cursor = db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ? order by date DESC, time DESC" , new String[] {dealership});
+            cursor = db.rawQuery( "select * from " + VEHICLE_ENTRY_TABLE_NAME + " where " + VEHICLE_ENTRY_COLUMN_DEALERSHIP + " = ?" , new String[] {dealership});
         return cursor;
     }
 

@@ -79,5 +79,17 @@
             android:text="Lot 1"
             />
 
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:id="@+id/imageHasNote"
+            android:visibility="gone"
+            android:contentDescription="has note"
+            android:src="@drawable/note"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/textEntryType"
+            android:paddingTop="5dp"
+            />
+
 
 </RelativeLayout>

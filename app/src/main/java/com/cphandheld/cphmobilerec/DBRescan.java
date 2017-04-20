@@ -146,7 +146,7 @@ public class DBRescan {
     public static void deleteRescanByUser(DBHelper dbh, String user) {
         SQLiteDatabase db = dbh.getWritableDatabase();
         db.delete(RESCAN_TABLE_NAME,
-                RESCAN_COLUMN_USER_ID + " = ? ",
+                RESCAN_COLUMN_USER_ID + "=? ",
                 new String[]{user});
     }
 

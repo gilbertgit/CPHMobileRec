@@ -533,7 +533,7 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
                 for (Rescan r : array) {
                     // insert rescan
                     // siid, dealerCode, vin, assigned, year, make, model, color,entryMethod, scannedDate, userId
-                    DBRescan.insertRescan(dbHelper, r.getSIID(), r.getDealership(), r.getVIN(), r.getAssigned(), r.getYear(), r.getMake(),                           r.getModel(), r.getColor(), r.getEntryType(), r.getScanneDate(), r.getUserId());
+                    DBRescan.insertRescan(dbHelper, r.getSIID(), r.getDealership(), r.getVIN(), r.getAssigned(), r.getYear(), r.getMake(), r.getModel(), r.getColor(), r.getEntryType(), r.getScanneDate(), String.valueOf(Utilities.currentUser.Id));
                 }
 
                 NotifyTabsOfUpdate("", getString(R.string.intent_data_refresh));

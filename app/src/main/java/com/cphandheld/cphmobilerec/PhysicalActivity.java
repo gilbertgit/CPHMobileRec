@@ -525,7 +525,7 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
                 int pos = 0;
                 if (dealershipSelection != 0)
-                    pos = dealershipSelection;
+                    pos = dealershipSelection-1;
 
                 if (c.getPosition() == pos) {
                     lotList.add(d.Lot1Name);

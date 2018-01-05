@@ -31,10 +31,6 @@ public class MainActivity extends Activity {
         Log.v(TAG, "onCreate");
         setContentView(R.layout.activity_main);
 
-        ActionBar actionBar = getActionBar();
-        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>CPH Reconciliation</font>"));
-        actionBar.hide();
-
         buttonPhysical = (Button)findViewById(R.id.buttonPhysical);
         buttonRescan = (Button)findViewById(R.id.buttonRescan);
         buttonFilterDealerships = (Button)(findViewById(R.id.buttonFilterDealerships));

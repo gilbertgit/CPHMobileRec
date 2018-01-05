@@ -8,12 +8,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -51,7 +56,7 @@ import org.w3c.dom.Text;
 /**
  * Created by titan on 5/21/16.
  */
-public class RescanActivity extends TabActivity  implements EMDKManager.EMDKListener {
+public class RescanActivity extends AppCompatActivity implements EMDKManager.EMDKListener {
 
     private final String TAG = "RescanActivity";
     private BroadcastReceiver EMDKRescanReceiver;
@@ -86,8 +91,12 @@ public class RescanActivity extends TabActivity  implements EMDKManager.EMDKList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rescan);
 
-        ActionBar actionBar = getActionBar();
-        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>RESCAN</font>"));
+        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(true);
+        String title = "PHYSICAL SCAN";
+        SpannableString s = new SpannableString(title);
+        s.setSpan(new ForegroundColorSpan(Color.WHITE), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        actionBar.setTitle(s);
         actionBar.show();
 
         dbHelper = new DBHelper(RescanActivity.this);

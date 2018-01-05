@@ -18,6 +18,7 @@
     <string name="intent_gps_receiver">com.cphandheld.CPHMobileRec.GPS_RECEIVER</string>
     <string name="app_url">http://mobileapi.cphandheld.com/</string>
     <string name="mint_splunk_api_key">1bba1d7b</string>
+    <string name="permissions_denial">In order to use this app, you must accept the permissions.</string>
 
     <string-array name="entry_type_array">
         <item>New</item>

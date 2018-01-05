@@ -4,14 +4,14 @@
 
     <item android:id="@+id/action_upload"
           android:icon="@drawable/ic_file_upload_white_24dp"
-          android:showAsAction="collapseActionView"
+          app:showAsAction="collapseActionView"
           android:orderInCategory="1"
           android:title="Upload"/>
 
     <item
         android:id="@+id/action_manual"
         android:icon="@drawable/ic_add_white_24dp"
-        android:showAsAction="always"
+        app:showAsAction="always"
         android:orderInCategory="0"
         android:title="Manual Entry"
         />

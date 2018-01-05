@@ -1,6 +1,6 @@
 package com.cphandheld.cphmobilerec;
 
-import android.app.ActionBar;
+import android.support.v7.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -22,7 +22,12 @@ import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 //import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.ActionMode;
@@ -36,6 +41,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
@@ -80,7 +86,7 @@ import java.util.Locale;
 /**
  * Created by titan on 4/8/16.
  */
-public class PhysicalActivity extends Activity implements EMDKListener, AbsListView.OnScrollListener {
+public class PhysicalActivity extends AppCompatActivity implements EMDKListener, AbsListView.OnScrollListener {
 
     private String TAG = "PhysicalActivity";
 
@@ -149,11 +155,16 @@ public class PhysicalActivity extends Activity implements EMDKListener, AbsListV
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_physical);
 
-        ActionBar actionBar = getActionBar();
-        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>PHYSICAL SCAN</font>"));
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(true);
+        String title = "PHYSICAL SCAN";
+        SpannableString s = new SpannableString(title);
+        s.setSpan(new ForegroundColorSpan(Color.WHITE), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        actionBar.setTitle(s);
         actionBar.show();
 
         mProgressDialog = new ProgressDialog(PhysicalActivity.this);

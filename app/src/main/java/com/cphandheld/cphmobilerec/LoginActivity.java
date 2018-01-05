@@ -1,16 +1,21 @@
 package com.cphandheld.cphmobilerec;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -39,7 +44,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LoginActivity extends ActionBarActivity {
+public class LoginActivity extends AppCompatActivity {
 
     public static final String PREFS_FILE = "SharedPrefs";
     ImageView imageButton1;
@@ -72,6 +77,18 @@ public class LoginActivity extends ActionBarActivity {
     DBHelper dbHelper;
     JSONArray dealershipResults;
     SharedPreferences.Editor editor;
+    TelephonyManager telemamanger;
+
+    private static final String[] PERMISSIONS = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.ACCESS_COARSE_LOCATION};
+    private static final int PERMISSION_REQUEST = 100;
+
+    //--------------------------------------------------
+    // Attributes
+    //--------------------------------------------------
+
+    private TelephonyManager mTelephonyManager;
+
+    private static final int PERM_PHONE_STATE = 2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,26 +107,33 @@ public class LoginActivity extends ActionBarActivity {
 
         // Get Scanner info
         Utilities.scannerSN = settings.getString("scannerSN", "");
-        if(Utilities.scannerSN.equals(""))
-        {
+        if (Utilities.scannerSN.equals("")) {
             try {
                 Class<?> c = Class.forName("android.os.SystemProperties");
-                Method get = c.getMethod("get", String.class, String.class );
-                Utilities.scannerSN = (String)(   get.invoke(c, "ro.serialno", "unknown" )  );
+                Method get = c.getMethod("get", String.class, String.class);
+                Utilities.scannerSN = (String) (get.invoke(c, "ro.serialno", "unknown"));
                 editor.putString("scannerSN", Utilities.scannerSN);
-            }
-            catch (Exception ignored)
-            {
+            } catch (Exception ignored) {
             }
         }
 
         // Get SIM info
-        TelephonyManager telemamanger = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-        Utilities.simNumber = telemamanger.getSimSerialNumber();
-        Utilities.phoneNumber = telemamanger.getLine1Number();
-        editor.putString("simNumber", Utilities.simNumber);
-        editor.putString("phoneNumber", Utilities.phoneNumber);
-        editor.commit();
+
+        checkPermissions();
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+//
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_PHONE_STATE}, PERM_PHONE_STATE);
+//
+//        }
+//        else {
+//            telemamanger = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+//            Utilities.simNumber = telemamanger.getSimSerialNumber();
+//            Utilities.phoneNumber = telemamanger.getLine1Number();
+//            editor.putString("simNumber", Utilities.simNumber);
+//            editor.putString("phoneNumber", Utilities.phoneNumber);
+//            editor.commit();
+//        }
+
 
         String versionName = com.cphandheld.cphmobilerec.BuildConfig.VERSION_NAME;
         Utilities.softwareVersion = versionName;
@@ -134,16 +158,72 @@ public class LoginActivity extends ActionBarActivity {
     }
 
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
 
-        if(Utilities.AppURL.equals(""))
-        {
+        if (Utilities.AppURL.equals("")) {
             Utilities.AppURL = getString(R.string.app_url);
             editor.putString("appURL", Utilities.AppURL);
             editor.commit();
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST: {
+                isPermissionGranted(grantResults);
+                return;
+            }
+        }
+    }
+
+    private void isPermissionGranted(int[] grantResults) {
+        if (grantResults.length > 0) {
+            Boolean permissionGranted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            if (permissionGranted) {
+                callPhoneManager();
+            } else {
+                Utilities.alertAndFinish(this);
+            }
+        }
+    }
+
+    private void checkPermissions() {
+        // Checks the Android version of the device.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Boolean canWriteExternalStorage = Utilities.canReadPhoneState(this);
+            Boolean canReadExternalStorage = Utilities.canAccessCoarseLocation(this);
+            if (!canWriteExternalStorage || !canReadExternalStorage) {
+                requestPermissions(PERMISSIONS, PERMISSION_REQUEST);
+            } else {
+                // Permission was granted.
+                callPhoneManager();
+            }
+        } else {
+            // Version is below Marshmallow.
+            callPhoneManager();
+        }
+    }
+
+    private void callPhoneManager() {
+        mTelephonyManager = (TelephonyManager) getSystemService(TELEPHONY_SERVICE);
+        saveSIMValues(mTelephonyManager);
+    }
+
+    private void saveSIMValues(TelephonyManager manager) {
+        telemamanger = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        Utilities.simNumber = manager.getSimSerialNumber();
+        Utilities.phoneNumber = manager.getLine1Number();
+        editor.putString("simNumber", Utilities.simNumber);
+        editor.putString("phoneNumber", Utilities.phoneNumber);
+        editor.commit();
     }
 
     protected void setClickEvents() {

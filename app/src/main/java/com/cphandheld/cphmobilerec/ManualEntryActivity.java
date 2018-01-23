@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.inputmethodservice.Keyboard;
 import android.inputmethodservice.KeyboardView;
 import android.location.Location;
@@ -13,8 +14,12 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
@@ -31,7 +36,7 @@ import java.util.Calendar;
 /**
  * Created by titan on 4/11/16.
  */
-public class ManualEntryActivity extends ActionBarActivity {
+public class ManualEntryActivity extends AppCompatActivity {
 
     Keyboard mKeyboard;
     KeyboardView mKeyboardView;
@@ -55,8 +60,12 @@ public class ManualEntryActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manual_entry);
 
-        ActionBar actionBar = getActionBar();
-        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>MANUAL ENTRY</font>"));
+        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(true);
+        String title = "MANUAL ENTRY";
+        SpannableString s = new SpannableString(title);
+        s.setSpan(new ForegroundColorSpan(Color.WHITE), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        actionBar.setTitle(s);
         actionBar.show();
 
         Intent intent = getIntent();
@@ -232,7 +241,7 @@ public class ManualEntryActivity extends ActionBarActivity {
         @Override public void onKey(int primaryCode, int[] keyCodes)
         {
             View focusCurrent = ManualEntryActivity.this.getWindow().getCurrentFocus();
-            if( focusCurrent==null || focusCurrent.getClass()!=EditText.class ) return;
+            if( focusCurrent==null || focusCurrent.getClass()!=android.support.v7.widget.AppCompatEditText.class ) return;
             EditText edittext = (EditText) focusCurrent;
             Editable editable = edittext.getText();
             int cursor = edittext.getSelectionEnd();

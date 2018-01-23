@@ -1,6 +1,7 @@
 package com.cphandheld.cphmobilerec;
 
 import android.app.ActionBar;
+import android.app.LocalActivityManager;
 import android.app.ProgressDialog;
 import android.app.TabActivity;
 import android.content.BroadcastReceiver;
@@ -114,6 +115,9 @@ public class RescanActivity extends AppCompatActivity implements EMDKManager.EMD
 
         // create the TabHost that will contain the Tabs
         tabHost = (TabHost)findViewById(android.R.id.tabhost);
+        LocalActivityManager mLocalActivityManager = new LocalActivityManager(RescanActivity.this, false);
+        mLocalActivityManager.dispatchCreate(savedInstanceState); // state will be bundle your activity state which you get in onCreate
+        tabHost.setup(mLocalActivityManager);
 
 
         TabHost.TabSpec tab1 = tabHost.newTabSpec("First Tab");

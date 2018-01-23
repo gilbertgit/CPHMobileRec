@@ -7,9 +7,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.support.v7.app.AppCompatActivity;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -37,7 +42,7 @@ import it.sauronsoftware.ftp4j.FTPDataTransferListener;
 /**
  * Created by titan on 5/20/16.
  */
-public class AdminActivity extends Activity {
+public class AdminActivity extends AppCompatActivity {
 
     EditText editTextUrl;
     Button buttonSetUrl;
@@ -69,8 +74,13 @@ public class AdminActivity extends Activity {
         buttonUploadData = (Button)findViewById(R.id.buttonUploadData);
         buttonClearDB = (Button)findViewById(R.id.buttonClearDB);
 
-        ActionBar actionBar = getActionBar();
-        actionBar.setTitle("Admin Mode");
+        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(true);
+        String title = "Admin Mode";
+        SpannableString s = new SpannableString(title);
+        s.setSpan(new ForegroundColorSpan(Color.WHITE), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        actionBar.setTitle(s);
+        actionBar.show();
 
         SharedPreferences settings = getSharedPreferences(Utilities.PREFS_FILE, 0);
         final SharedPreferences.Editor editor = settings.edit();

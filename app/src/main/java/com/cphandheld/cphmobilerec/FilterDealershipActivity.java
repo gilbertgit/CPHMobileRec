@@ -3,8 +3,14 @@ package com.cphandheld.cphmobilerec;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.AppCompatEditText;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,7 +25,7 @@ import java.util.ArrayList;
 /**
  * Created by titan on 10/6/16.
  */
-public class FilterDealershipActivity extends Activity {
+public class FilterDealershipActivity extends AppCompatActivity {
 
     private String TAG = "FilterDealership";
 
@@ -37,8 +43,8 @@ public class FilterDealershipActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter_dealerships);
         Mint.leaveBreadcrumb("FilterDealershipActivity-onCreate");
-        ActionBar actionBar = getActionBar();
-        actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>Filter Dealership</font>"));
+
+        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
         actionBar.hide();
 
         dbHelper = new DBHelper(FilterDealershipActivity.this);

@@ -3,9 +3,13 @@ package com.cphandheld.cphmobilerec;
 import android.app.ActionBar;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -61,7 +65,9 @@ public class EditEntryActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_entry);
 
-        ActionBar actionBar = getActionBar();
+        android.support.v7.app.ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayShowTitleEnabled(true);
+        String title = "";
         actionBar.show();
 
         Intent intent = getIntent();
@@ -76,13 +82,13 @@ public class EditEntryActivity extends ActionBarActivity {
         sentSelectedItems = intent.getStringArrayListExtra("extraSelectedItems");
 
         if(sentSelectedItems.size() > 1) {
-            actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>EDITING " + sentSelectedItems.size() + " ITEMS</font>"));
+            title = "EDITING " + sentSelectedItems.size() + " ITEMS";
             sentDealership = intent.getStringExtra("extraDealership");
             isMultiEdit = true;
         }
         else if (sentSelectedItems.size() == 1){
             sentVin = sentSelectedItems.get(0);
-            actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>" + sentVin + "</font>"));
+            title = sentVin;
             Physical p = getVehicleEntry(sentVin);
             sentDealership = p.getDealership();
             newUsed = p.getNewUsed();
@@ -91,7 +97,7 @@ public class EditEntryActivity extends ActionBarActivity {
             entryType = p.getEntryType();
         }
         else{
-            actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>" + sentVin + "</font>"));
+            title = sentVin;
             Physical p = getVehicleEntry(sentVin);
             sentDealership = p.getDealership();
             newUsed = p.getNewUsed();
@@ -99,6 +105,10 @@ public class EditEntryActivity extends ActionBarActivity {
             notes = p.getNotes();
             entryType = p.getEntryType();
         }
+
+        SpannableString s = new SpannableString(title);
+        s.setSpan(new ForegroundColorSpan(Color.WHITE), 0, title.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        actionBar.setTitle(s);
 
         spinnerDealership = (Spinner) findViewById(R.id.spinnerDealership);
         spinnerNewUsed = (Spinner) findViewById(R.id.spinnerType);
